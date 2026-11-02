@@ -45,8 +45,155 @@ import {
   Download,
   Filter,
   Send,
-  Lock,
+  FolderGit2,
+  Upload,
+  FileArchive,
+  Info,
+  Star,
+  Settings,
+  MoreHorizontal,
+  ChevronUp,
+  PanelLeftClose,
+  PanelLeftOpen,
+  ExternalLink as ExternalLinkIcon,
 } from 'lucide-react';
+
+// Project interface for Project Library
+interface ProjectItem {
+  id: string;
+  title: string;
+  category: 'web' | 'backend' | 'ai' | 'devops';
+  stack: string[];
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  description: string;
+  modes: string[];
+  estTime: string;
+  repo: string;
+  rating: number;
+}
+
+const PROJECTS_DATA: ProjectItem[] = [
+  {
+    id: 'ecommerce-microservices',
+    title: 'E-Commerce Distributed Microservices',
+    category: 'backend',
+    stack: ['Node.js', 'Express', 'MongoDB', 'Redis', 'Docker'],
+    difficulty: 'Medium',
+    description: 'Multi-service online store with checkout race conditions, Redis cart cache invalidation, and Stripe webhook handling.',
+    modes: ['Debugging', 'Feature Dev'],
+    estTime: '45m',
+    repo: 'devpractice-org/ecommerce-microservices',
+    rating: 4.8,
+  },
+  {
+    id: 'realtime-canvas',
+    title: 'Collaborative Real-time Canvas (WebSockets)',
+    category: 'web',
+    stack: ['React', 'TypeScript', 'Next.js', 'Socket.io', 'Tailwind'],
+    difficulty: 'Medium',
+    description: 'Multiplayer whiteboarding workspace with state synchronization lags, optimistic rendering bugs, and cursor delta compression.',
+    modes: ['Debugging', 'Feature Dev'],
+    estTime: '40m',
+    repo: 'devpractice-org/realtime-canvas',
+    rating: 4.9,
+  },
+  {
+    id: 'rag-embeddings',
+    title: 'RAG Document Search & Vector Embeddings',
+    category: 'ai',
+    stack: ['Python', 'FastAPI', 'PyTorch', 'ChromaDB', 'OpenAI'],
+    difficulty: 'Hard',
+    description: 'Semantic vector retrieval pipeline with chunking overlap regressions, hallucination guardrails, and cosine similarity ranking.',
+    modes: ['Debugging', 'Interview Sim'],
+    estTime: '60m',
+    repo: 'devpractice-org/rag-embeddings-engine',
+    rating: 4.9,
+  },
+  {
+    id: 'k8s-gitops',
+    title: 'Kubernetes Cluster GitOps & CI/CD Pipeline',
+    category: 'devops',
+    stack: ['Docker', 'Kubernetes', 'GitHub Actions', 'Helm', 'Prometheus'],
+    difficulty: 'Hard',
+    description: 'Automated delivery pipeline with container crash loops, ingress SSL termination bugs, and pod memory leak profiling.',
+    modes: ['Environment Rescue', 'Debugging'],
+    estTime: '50m',
+    repo: 'devpractice-org/k8s-gitops-pipeline',
+    rating: 4.7,
+  },
+  {
+    id: 'url-shortener-go',
+    title: 'High-Concurrency Distributed URL Shortener',
+    category: 'backend',
+    stack: ['Go', 'PostgreSQL', 'Redis', 'Docker', 'Base62'],
+    difficulty: 'Easy',
+    description: 'Scalable link redirect engine with database connection pool exhaustion, cache stampedes, and analytics telemetry.',
+    modes: ['Feature Dev', 'Debugging'],
+    estTime: '30m',
+    repo: 'devpractice-org/url-shortener-go',
+    rating: 4.8,
+  },
+  {
+    id: 'social-analytics',
+    title: 'Social Media Analytics Dashboard & Feed',
+    category: 'web',
+    stack: ['React', 'GraphQL', 'Node.js', 'PostgreSQL', 'Chart.js'],
+    difficulty: 'Easy',
+    description: 'Interactive engagement metrics dashboard with N+1 GraphQL query waterfalls, infinite scroll pagination, and memory leaks.',
+    modes: ['Feature Dev', 'Debugging'],
+    estTime: '35m',
+    repo: 'devpractice-org/social-analytics-dashboard',
+    rating: 4.6,
+  },
+  {
+    id: 'fraud-detection',
+    title: 'Financial Fraud Detection ML Pipeline',
+    category: 'ai',
+    stack: ['Python', 'scikit-learn', 'Pandas', 'FastAPI', 'Docker'],
+    difficulty: 'Medium',
+    description: 'Real-time transaction classification system with class imbalance degradation, feature drift, and latency bottlenecks.',
+    modes: ['Debugging', 'Feature Dev'],
+    estTime: '45m',
+    repo: 'devpractice-org/fraud-detection-ml',
+    rating: 4.9,
+  },
+  {
+    id: 'db-migration',
+    title: 'Zero-Downtime Database Migration & Replication',
+    category: 'devops',
+    stack: ['PostgreSQL', 'Docker', 'Bash', 'Flyway', 'Nginx'],
+    difficulty: 'Hard',
+    description: 'Live schema migration runner handling table lock contention, replica lag monitoring, and blue/green failovers.',
+    modes: ['Environment Rescue'],
+    estTime: '55m',
+    repo: 'devpractice-org/db-zero-downtime-migration',
+    rating: 4.8,
+  },
+  {
+    id: 'saas-tenant-rbac',
+    title: 'SaaS Multi-Tenant Authentication & RBAC',
+    category: 'backend',
+    stack: ['Node.js', 'TypeScript', 'Prisma', 'JWT', 'PostgreSQL'],
+    difficulty: 'Medium',
+    description: 'Enterprise multi-tenant auth with cross-tenant data leak bugs, JWT refresh rotation, and permission bitmasks.',
+    modes: ['Debugging', 'Interview Sim'],
+    estTime: '40m',
+    repo: 'devpractice-org/saas-tenant-rbac',
+    rating: 4.9,
+  },
+  {
+    id: 'multi-agent-orchestrator',
+    title: 'Autonomous Multi-Agent Task Orchestrator',
+    category: 'ai',
+    stack: ['Python', 'LangChain', 'FastAPI', 'Redis', 'Docker'],
+    difficulty: 'Hard',
+    description: 'Multi-agent planning loop with infinite recursive tool call bugs, context window overflow, and state rollback.',
+    modes: ['Debugging', 'Feature Dev'],
+    estTime: '60m',
+    repo: 'devpractice-org/multi-agent-orchestrator',
+    rating: 5.0,
+  },
+];
 
 function DashboardView() {
   const { user, logout } = useAuth();
@@ -59,6 +206,15 @@ function DashboardView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [activeChallengeModal, setActiveChallengeModal] = useState<string | null>(null);
+
+  // Project Library state
+  const [projectFilterChip, setProjectFilterChip] = useState<'all' | 'web' | 'backend' | 'ai' | 'devops'>('all');
+  const [projectSearch, setProjectSearch] = useState('');
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importTab, setImportTab] = useState<'github' | 'zip'>('github');
+  const [importGithubUrl, setImportGithubUrl] = useState('');
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [waitlistSuccess, setWaitlistSuccess] = useState(false);
 
   // Daily goals state
   const [dailyGoals, setDailyGoals] = useState([
@@ -112,7 +268,7 @@ function DashboardView() {
     router.push('/login');
   };
 
-  // User display name (matching media_1793594609449.png: Alex Rivera)
+  // User display name
   const displayName = user?.name || 'Alex Rivera';
   const firstName = displayName.split(' ')[0] || 'Alex';
   const displayRole = user?.role === 'instructor' || user?.role === 'org_admin' ? 'Instructor' : 'Student';
@@ -148,159 +304,351 @@ function DashboardView() {
     }, 700);
   };
 
+  const handleJoinWaitlist = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!waitlistEmail.trim()) return;
+    setWaitlistSuccess(true);
+    setTimeout(() => {
+      setWaitlistSuccess(false);
+      setWaitlistEmail('');
+      setImportModalOpen(false);
+    }, 2200);
+  };
+
+  // Submenu open/close state matching media_1793615717485.png
+  const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({
+    Projects: true,
+    Practice: false,
+  });
+
+  const toggleSubmenu = (menuName: string) => {
+    setOpenSubmenus((prev) => ({
+      ...prev,
+      [menuName]: !prev[menuName],
+    }));
+  };
+
+  // Navigation items with count badges and expandable sub-menus
   const navItems = [
-    { name: 'Dashboard', icon: LayoutDashboard },
-    { name: 'Practice', icon: Code2 },
-    { name: 'Challenges', icon: Layers },
-    { name: 'Assessments', icon: ClipboardList },
-    { name: 'Progress', icon: BarChart2 },
-    { name: 'AI Assistant', icon: Sparkles },
-    { name: 'Resources', icon: BookOpen },
-    { name: 'Community', icon: Users },
+    {
+      name: 'Dashboard',
+      icon: LayoutDashboard,
+      badge: '24',
+    },
+    {
+      name: 'Projects',
+      icon: FolderGit2,
+      badge: '10',
+      hasSubmenu: true,
+      subItems: [
+        { label: 'All Projects', action: () => { setActiveNav('Projects'); setProjectFilterChip('all'); } },
+        { label: 'Web Dev', action: () => { setActiveNav('Projects'); setProjectFilterChip('web'); } },
+        { label: 'Backend', action: () => { setActiveNav('Projects'); setProjectFilterChip('backend'); } },
+        { label: 'AI / ML', action: () => { setActiveNav('Projects'); setProjectFilterChip('ai'); } },
+        { label: 'DevOps', action: () => { setActiveNav('Projects'); setProjectFilterChip('devops'); } },
+      ],
+    },
+    {
+      name: 'Practice',
+      icon: Code2,
+      badge: '4',
+      hasSubmenu: true,
+      subItems: [
+        { label: 'Debugging Round', action: () => { setActiveNav('Practice'); setSelectedPracticeMode('debugging'); } },
+        { label: 'Environment Rescue', action: () => { setActiveNav('Practice'); setSelectedPracticeMode('rescue'); } },
+        { label: 'Feature Dev', action: () => { setActiveNav('Practice'); setSelectedPracticeMode('feature'); } },
+        { label: 'Interview Simulation', action: () => { setActiveNav('Practice'); setSelectedPracticeMode('interview'); } },
+      ],
+    },
+    {
+      name: 'Challenges',
+      icon: Layers,
+      badge: '500+',
+    },
+    {
+      name: 'Assessments',
+      icon: ClipboardList,
+      badge: 'TCS',
+    },
+    {
+      name: 'Progress',
+      icon: BarChart2,
+      badge: '68%',
+    },
+    {
+      name: 'AI Assistant',
+      icon: Sparkles,
+      badge: 'PRO',
+    },
+    {
+      name: 'Resources',
+      icon: BookOpen,
+    },
+    {
+      name: 'Community',
+      icon: Users,
+    },
   ];
+
+  // Filtered projects for Project Library
+  const filteredProjects = PROJECTS_DATA.filter((p) => {
+    const matchesChip = projectFilterChip === 'all' || p.category === projectFilterChip;
+    const matchesSearch =
+      !projectSearch.trim() ||
+      p.title.toLowerCase().includes(projectSearch.toLowerCase()) ||
+      p.description.toLowerCase().includes(projectSearch.toLowerCase()) ||
+      p.stack.some((s) => s.toLowerCase().includes(projectSearch.toLowerCase()));
+    return matchesChip && matchesSearch;
+  });
 
   return (
     <div className="min-h-screen bg-[#F4F6FC] flex font-sans antialiased text-slate-800">
       {/* ========================================================================= */}
-      {/* 1. ANIMATED COLLAPSIBLE SIDEBAR (#0C0B24)                                  */}
+      {/* 1. SIDEBAR (Matching media_1793615717485.png: Multi-Level & 64px Rail)   */}
       {/* ========================================================================= */}
       <motion.aside
-        animate={{ width: sidebarCollapsed ? 76 : 256 }}
-        transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
-        className="bg-[#0C0B24] border-r border-[#1B1A3C] flex-shrink-0 flex flex-col justify-between p-4 min-h-screen select-none relative z-30 overflow-hidden"
+        animate={{ width: sidebarCollapsed ? 68 : 248 }}
+        transition={{ duration: 0.26, ease: [0.25, 0.1, 0.25, 1] }}
+        className={`bg-[#0A091E] border-r border-[#1B173B] flex-shrink-0 flex flex-col justify-between ${
+          sidebarCollapsed ? 'px-2 py-4' : 'p-3.5'
+        } min-h-screen select-none relative z-30 transition-all font-sans`}
       >
         <div>
-          {/* Logo Brand Header & Collapse Toggle */}
-          <div className="flex items-center justify-between px-1 py-2 mb-6">
-            <Link href="/" className="flex items-center gap-3 overflow-hidden">
-              <div className="w-10 h-10 rounded-xl bg-[#5B48EE] flex items-center justify-center text-white font-mono font-bold text-sm shadow-lg shadow-indigo-500/25 flex-shrink-0">
-                {'</>'}
-              </div>
-              {!sidebarCollapsed && (
-                <motion.div
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  className="flex items-center gap-2 overflow-hidden whitespace-nowrap"
-                >
-                  <span className="text-white font-bold text-lg tracking-tight">DevPractice</span>
-                  <span className="text-[10px] font-semibold bg-[#221A4B] text-[#9D8EFF] px-2 py-0.5 rounded border border-[#3C2D7B]">
+          {/* Top Brand Header */}
+          {!sidebarCollapsed ? (
+            <div className="flex items-center justify-between px-2 py-1.5 mb-4">
+              <Link href="/" className="flex items-center gap-2.5 overflow-hidden">
+                <div className="w-8 h-8 rounded-xl bg-[#5B48EE] flex items-center justify-center text-white font-mono font-bold text-xs shadow-md shadow-indigo-500/25 shrink-0">
+                  {'</>'}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-white font-bold text-[15px] tracking-tight truncate">DevPractice</span>
+                  <span className="text-[10px] font-semibold bg-[#221A4B] text-[#9D8EFF] px-1.5 py-0.2 rounded border border-[#3C2D7B]">
                     Student
                   </span>
-                </motion.div>
-              )}
-            </Link>
-
-            {/* Sidebar Collapse Toggle Button */}
-            <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#1C1A42] transition-colors"
-              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              {sidebarCollapsed ? (
-                <ChevronRight className="w-4 h-4 text-[#A69BFF]" />
-              ) : (
-                <ChevronLeft className="w-4 h-4" />
-              )}
-            </button>
-          </div>
-
-          {/* Navigation Links */}
-          <nav className="space-y-1.5">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeNav === item.name;
-              return (
-                <button
-                  key={item.name}
-                  onClick={() => setActiveNav(item.name)}
-                  title={sidebarCollapsed ? item.name : undefined}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all relative group ${
-                    isActive
-                      ? 'bg-[#5B48EE] text-white shadow-lg shadow-indigo-500/30'
-                      : 'text-[#8F8CAE] hover:text-white hover:bg-[#151336]'
-                  }`}
-                >
-                  <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-white' : 'text-[#8F8CAE] group-hover:text-white transition-colors'}`} />
-                  
-                  {!sidebarCollapsed && (
-                    <span className="truncate">{item.name}</span>
-                  )}
-
-                  {/* Tooltip in collapsed mode */}
-                  {sidebarCollapsed && (
-                    <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-[#1B1942] text-white text-xs font-semibold rounded-lg shadow-xl border border-[#2D2A6B] opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50 whitespace-nowrap">
-                      {item.name}
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Bottom Sidebar Container */}
-        <div className="space-y-3 pt-4 border-t border-[#1C1A40]">
-          {/* Placement Track Card (Expanded vs Collapsed) */}
-          {!sidebarCollapsed ? (
-            <div className="bg-[#181639] border border-[#272455] rounded-2xl p-3.5 text-white">
-              <div className="flex items-center gap-3 mb-2.5">
-                <div className="w-8 h-8 rounded-xl bg-[#26225B] flex items-center justify-center text-[#A69BFF] flex-shrink-0">
-                  <Target className="w-4 h-4 text-[#A69BFF]" />
                 </div>
-                <div className="leading-tight overflow-hidden">
-                  <p className="text-[11px] font-medium text-slate-400">Placement Track</p>
-                  <p className="text-xs font-bold text-white truncate">Backend Developer</p>
-                </div>
-              </div>
+              </Link>
 
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex-1 h-1.5 rounded-full bg-[#272455] overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#5B48EE] to-[#8E7CFF] rounded-full transition-all duration-500" style={{ width: '68%' }} />
-                </div>
-                <span className="text-[11px] font-bold text-slate-300">68%</span>
-              </div>
+              {/* Collapse Trigger */}
+              <button
+                onClick={() => setSidebarCollapsed(true)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#181538] transition-colors"
+                title="Collapse sidebar"
+                aria-label="Collapse sidebar"
+              >
+                <PanelLeftClose className="w-4 h-4" />
+              </button>
             </div>
           ) : (
-            <div className="flex justify-center" title="Placement Track: Backend Developer (68%)">
-              <div className="w-10 h-10 rounded-xl bg-[#181639] border border-[#272455] flex items-center justify-center text-[#A69BFF]">
-                <Target className="w-5 h-5" />
-              </div>
+            <div className="flex flex-col items-center gap-2.5 mb-4">
+              <Link href="/" title="DevPractice">
+                <div className="w-8 h-8 rounded-xl bg-[#5B48EE] flex items-center justify-center text-white font-mono font-bold text-xs shadow-md shadow-indigo-500/25">
+                  {'</>'}
+                </div>
+              </Link>
+
+              {/* Expand Trigger */}
+              <button
+                onClick={() => setSidebarCollapsed(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#181538] transition-colors"
+                title="Expand sidebar"
+                aria-label="Expand sidebar"
+              >
+                <PanelLeftOpen className="w-4 h-4 text-[#A69BFF]" />
+              </button>
             </div>
           )}
 
-          {/* Need Help & Logout Actions */}
-          <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'justify-between px-2'} pt-1 text-xs text-[#8F8CAE]`}>
-            {!sidebarCollapsed ? (
-              <>
-                <button
-                  onClick={() => alert('DevPractice Mentorship: Our live engineering mentors are online 24/7.')}
-                  className="flex items-center gap-2 hover:text-white transition-colors"
-                >
-                  <Headphones className="w-4 h-4" />
-                  <span>Need Help?</span>
-                </button>
+          {/* Navigation Links */}
+          {!sidebarCollapsed ? (
+            <nav className="space-y-0.5">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeNav === item.name;
+                const isSubOpen = openSubmenus[item.name];
 
-                <button
-                  onClick={handleLogout}
-                  title="Sign Out"
-                  className="hover:text-rose-400 transition-colors p-1"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={handleLogout}
-                title="Sign Out"
-                className="w-10 h-10 rounded-xl hover:bg-[#181639] flex items-center justify-center text-[#8F8CAE] hover:text-rose-400 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+                return (
+                  <div key={item.name} className="space-y-0.5">
+                    <button
+                      onClick={() => {
+                        setActiveNav(item.name);
+                        if (item.hasSubmenu) {
+                          toggleSubmenu(item.name);
+                        }
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-[13px] font-medium transition-all group ${
+                        isActive
+                          ? 'bg-[#181534] text-white border border-[#2B2554] shadow-xs'
+                          : 'text-[#8F8CAE] hover:text-white hover:bg-[#14112E]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#8F8CAE] group-hover:text-white transition-colors'}`} />
+                        <span className="truncate">{item.name}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {item.badge && (
+                          <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-md ${
+                            isActive
+                              ? 'bg-[#25204E] text-[#B8AEFF] border border-[#3C357A]'
+                              : 'bg-[#14122E] text-slate-400 border border-[#211E44]'
+                          }`}>
+                            {item.badge}
+                          </span>
+                        )}
+
+                        {item.hasSubmenu && (
+                          <ChevronDown
+                            className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                              isSubOpen ? 'rotate-180 text-white' : ''
+                            }`}
+                          />
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Expandable nested submenu links */}
+                    {item.hasSubmenu && isSubOpen && item.subItems && (
+                      <div className="pl-8 pr-2 py-0.5 space-y-0.5 overflow-hidden">
+                        {item.subItems.map((sub, sIdx) => (
+                          <button
+                            key={sIdx}
+                            onClick={sub.action}
+                            className="w-full text-left py-1 px-2.5 rounded-lg text-xs text-slate-400 hover:text-white hover:bg-[#161338] transition-colors truncate block"
+                          >
+                            {sub.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </nav>
+          ) : (
+            /* Collapsed Rail Column */
+            <nav className="space-y-1.5">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeNav === item.name;
+
+                return (
+                  <div key={item.name} className="relative group flex justify-center">
+                    <button
+                      onClick={() => setActiveNav(item.name)}
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                        isActive
+                          ? 'bg-[#181534] text-white border border-[#2B2554] shadow-xs'
+                          : 'text-[#8F8CAE] hover:text-white hover:bg-[#14112E]'
+                      }`}
+                    >
+                      <Icon className={`w-4.5 h-4.5 ${isActive ? 'text-white' : 'text-[#8F8CAE] group-hover:text-white'}`} />
+                    </button>
+
+                    {/* Floating tooltip */}
+                    <div className="absolute left-full ml-3 px-3 py-1.5 bg-[#120F30] text-white text-xs font-semibold rounded-xl shadow-2xl border border-[#302B68] opacity-0 pointer-events-none group-hover:opacity-100 transition-all duration-150 transform -translate-x-1 group-hover:translate-x-0 z-50 whitespace-nowrap flex items-center gap-2">
+                      <span>{item.name}</span>
+                      {item.badge && (
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#25204E] text-[#B8AEFF] border border-[#3C357A]">
+                          {item.badge}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </nav>
+          )}
         </div>
+
+        {/* Bottom Section (Inbox, Settings, User Profile) */}
+        {!sidebarCollapsed ? (
+          <div className="pt-3 border-t border-[#1C173E] space-y-1.5">
+            {/* Inbox / Notifications with badge */}
+            <button
+              onClick={() => setNotificationsOpen(!notificationsOpen)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-[13px] font-medium text-[#8F8CAE] hover:text-white hover:bg-[#14112E] transition-all group"
+            >
+              <div className="flex items-center gap-2.5">
+                <Bell className="w-4 h-4 text-[#8F8CAE] group-hover:text-white transition-colors" />
+                <span>Inbox</span>
+              </div>
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-md bg-[#14122E] text-slate-400 border border-[#211E44]">
+                3
+              </span>
+            </button>
+
+            {/* Settings */}
+            <button
+              onClick={() => alert('Settings: Workspace preferences, keybindings, and AI API keys.')}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-[13px] font-medium text-[#8F8CAE] hover:text-white hover:bg-[#14112E] transition-all group"
+            >
+              <Settings className="w-4 h-4 text-[#8F8CAE] group-hover:text-white transition-colors" />
+              <span>Settings</span>
+            </button>
+
+            {/* User Profile Card with vibrant iridescent gradient avatar */}
+            <div
+              onClick={() => setProfileOpen(!profileOpen)}
+              className="flex items-center justify-between p-2 rounded-2xl bg-[#13102C] border border-[#241E4E] hover:border-[#3A3378] transition-colors cursor-pointer group"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs shadow-md shrink-0">
+                  {firstName.slice(0, 1)}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-white truncate leading-tight">{displayName}</p>
+                  <p className="text-[10px] text-slate-400 truncate">{displayRole}</p>
+                </div>
+              </div>
+              <MoreHorizontal className="w-4 h-4 text-slate-400 group-hover:text-white shrink-0" />
+            </div>
+          </div>
+        ) : (
+          <div className="pt-3 border-t border-[#1C173E] flex flex-col items-center gap-2">
+            {/* Inbox icon */}
+            <div className="relative group">
+              <button
+                onClick={() => setNotificationsOpen(!notificationsOpen)}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-[#8F8CAE] hover:text-white hover:bg-[#14112E] transition-colors"
+                aria-label="Inbox"
+              >
+                <Bell className="w-4.5 h-4.5" />
+              </button>
+              <div className="absolute left-full ml-3 px-3 py-1.5 bg-[#120F30] text-white text-xs font-semibold rounded-xl shadow-2xl border border-[#302B68] opacity-0 pointer-events-none group-hover:opacity-100 transition-all z-50 whitespace-nowrap">
+                Inbox (3)
+              </div>
+            </div>
+
+            {/* Settings icon */}
+            <div className="relative group">
+              <button
+                onClick={() => alert('Settings: Workspace preferences, keybindings, and AI API keys.')}
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-[#8F8CAE] hover:text-white hover:bg-[#14112E] transition-colors"
+                aria-label="Settings"
+              >
+                <Settings className="w-4.5 h-4.5" />
+              </button>
+              <div className="absolute left-full ml-3 px-3 py-1.5 bg-[#120F30] text-white text-xs font-semibold rounded-xl shadow-2xl border border-[#302B68] opacity-0 pointer-events-none group-hover:opacity-100 transition-all z-50 whitespace-nowrap">
+                Settings
+              </div>
+            </div>
+
+            {/* User Avatar with vibrant gradient */}
+            <div
+              onClick={() => setProfileOpen(!profileOpen)}
+              className="relative group cursor-pointer my-1"
+            >
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs shadow-md hover:scale-105 transition-transform">
+                {firstName.slice(0, 1)}
+              </div>
+              <div className="absolute left-full ml-3 px-3 py-1.5 bg-[#120F30] text-white text-xs font-semibold rounded-xl shadow-2xl border border-[#302B68] opacity-0 pointer-events-none group-hover:opacity-100 transition-all z-50 whitespace-nowrap">
+                {displayName} ({displayRole})
+              </div>
+            </div>
+          </div>
+        )}
       </motion.aside>
 
       {/* ========================================================================= */}
@@ -673,10 +1021,10 @@ function DashboardView() {
                     <div className="flex items-center justify-between mb-5">
                       <h3 className="text-base font-bold text-slate-900">Continue Practicing</h3>
                       <button
-                        onClick={() => setActiveNav('Challenges')}
+                        onClick={() => setActiveNav('Projects')}
                         className="text-xs font-bold text-[#5B48EE] hover:text-[#4A37D6] flex items-center gap-1"
                       >
-                        <span>View All</span>
+                        <span>View Project Library</span>
                         <ChevronRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -788,7 +1136,7 @@ function DashboardView() {
                       <div className="mt-4 p-3 rounded-xl bg-purple-50/70 border border-purple-100 text-[11px] text-purple-900 flex items-center justify-between">
                         <span>💡 Practice 2 Database questions to boost readiness +6%</span>
                         <button
-                          onClick={() => setActiveNav('Practice')}
+                          onClick={() => setActiveNav('Projects')}
                           className="font-bold text-[#5B48EE] hover:underline flex-shrink-0 ml-2"
                         >
                           Solve Now →
@@ -851,11 +1199,11 @@ function DashboardView() {
                         action: () => setActiveChallengeModal('Daily Challenge: Cache Invalidation in Redis'),
                       },
                       {
-                        title: 'Resume Track',
-                        desc: 'Continue Backend Developer roadmaps',
-                        icon: GraduationCap,
+                        title: 'Project Library',
+                        desc: 'Explore 10+ real-world repositories',
+                        icon: FolderGit2,
                         color: 'from-purple-500 to-[#5B48EE]',
-                        action: () => setActiveNav('Practice'),
+                        action: () => setActiveNav('Projects'),
                       },
                       {
                         title: 'AI Mock Interview',
@@ -865,11 +1213,11 @@ function DashboardView() {
                         action: () => setActiveNav('Assessments'),
                       },
                       {
-                        title: 'System Design',
-                        desc: 'Architect a high-concurrency API gateway',
-                        icon: Layers,
+                        title: 'Import Repository',
+                        desc: 'Import GitHub repository or ZIP archive',
+                        icon: Upload,
                         color: 'from-emerald-500 to-teal-600',
-                        action: () => setActiveChallengeModal('System Design: Distributed Rate Limiter'),
+                        action: () => setImportModalOpen(true),
                       },
                     ].map((act) => {
                       const Icon = act.icon;
@@ -895,7 +1243,209 @@ function DashboardView() {
             )}
 
             {/* ------------------------------------------------------------------- */}
-            {/* TAB 2: PRACTICE VIEW (Blueprint Modes & Live Repos)                 */}
+            {/* TAB 2: PROJECT LIBRARY (MVP - Task 2)                               */}
+            {/* ------------------------------------------------------------------- */}
+            {activeNav === 'Projects' && (
+              <motion.div
+                key="projects-view"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                {/* Header with Title and "Import Your Own Project" CTA */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                      <FolderGit2 className="w-7 h-7 text-[#5B48EE]" />
+                      <span>Project Library (MVP)</span>
+                    </h1>
+                    <p className="text-xs sm:text-sm text-slate-500 mt-1 font-medium">
+                      Search multi-file production repositories. Choose your stack, inspect bugs, and push pull requests.
+                    </p>
+                  </div>
+
+                  {/* "Import Your Own Project" Trigger Button */}
+                  <button
+                    onClick={() => setImportModalOpen(true)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#5B48EE] to-[#7D6BFF] text-white text-xs font-bold shadow-lg shadow-indigo-500/25 hover:opacity-95 transition-all flex-shrink-0"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>Import Your Own Project</span>
+                    <span className="px-1.5 py-0.5 rounded bg-white/20 text-[10px] font-semibold uppercase tracking-wider">
+                      Coming Soon
+                    </span>
+                  </button>
+                </div>
+
+                {/* Search & Filter Toolbar */}
+                <div className="bg-white rounded-3xl p-5 border border-[#E7EAF3] shadow-sm space-y-4">
+                  {/* Top Bar: Search Input */}
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search projects by name, keywords, or tech stack (e.g. React, Docker, Python)..."
+                      value={projectSearch}
+                      onChange={(e) => setProjectSearch(e.target.value)}
+                      className="w-full pl-11 pr-4 py-2.5 bg-[#F4F6FC] border border-transparent focus:border-[#5B48EE]/40 focus:bg-white rounded-2xl text-xs text-slate-800 placeholder-slate-400 outline-none transition-all"
+                    />
+                    {projectSearch && (
+                      <button
+                        onClick={() => setProjectSearch('')}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Chips: All, Web Dev, Backend, AI/ML, DevOps */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-slate-100">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-bold text-slate-500 mr-1 flex items-center gap-1">
+                        <Filter className="w-3.5 h-3.5" />
+                        Domain:
+                      </span>
+                      {[
+                        { id: 'all', label: 'All Projects', count: PROJECTS_DATA.length },
+                        { id: 'web', label: 'Web Dev', count: PROJECTS_DATA.filter((p) => p.category === 'web').length },
+                        { id: 'backend', label: 'Backend', count: PROJECTS_DATA.filter((p) => p.category === 'backend').length },
+                        { id: 'ai', label: 'AI/ML', count: PROJECTS_DATA.filter((p) => p.category === 'ai').length },
+                        { id: 'devops', label: 'DevOps', count: PROJECTS_DATA.filter((p) => p.category === 'devops').length },
+                      ].map((chip) => {
+                        const isSelected = projectFilterChip === chip.id;
+                        return (
+                          <button
+                            key={chip.id}
+                            onClick={() => setProjectFilterChip(chip.id as any)}
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                              isSelected
+                                ? 'bg-[#5B48EE] text-white shadow-md shadow-indigo-500/25'
+                                : 'bg-[#F4F6FC] text-slate-600 hover:bg-slate-200/70 hover:text-slate-900'
+                            }`}
+                          >
+                            <span>{chip.label}</span>
+                            <span
+                              className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                                isSelected ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
+                              }`}
+                            >
+                              {chip.count}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <span className="text-xs font-semibold text-slate-400">
+                      Showing {filteredProjects.length} of {PROJECTS_DATA.length} projects
+                    </span>
+                  </div>
+                </div>
+
+                {/* Project Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {filteredProjects.map((project) => (
+                    <div
+                      key={project.id}
+                      className="bg-white rounded-3xl p-6 border border-[#E7EAF3] shadow-xs hover:shadow-xl hover:border-purple-200 transition-all flex flex-col justify-between group"
+                    >
+                      <div>
+                        {/* Card Top: Category, Rating & Difficulty Badge */}
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 uppercase tracking-wider">
+                            {project.category === 'ai' ? 'AI / ML' : project.category.toUpperCase()}
+                          </span>
+
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-500">
+                              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                              {project.rating}
+                            </span>
+
+                            {/* Difficulty Badge (Easy / Medium / Hard) */}
+                            <span
+                              className={`px-2.5 py-0.5 rounded-lg text-xs font-bold border ${
+                                project.difficulty === 'Easy'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : project.difficulty === 'Medium'
+                                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                  : 'bg-rose-50 text-rose-700 border-rose-200'
+                              }`}
+                            >
+                              {project.difficulty}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Project Title */}
+                        <h3 className="text-base font-bold text-slate-900 group-hover:text-[#5B48EE] transition-colors leading-snug mb-2">
+                          {project.title}
+                        </h3>
+
+                        {/* Description */}
+                        <p className="text-xs text-slate-500 leading-relaxed mb-4">
+                          {project.description}
+                        </p>
+
+                        {/* Tech Stack Badges */}
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                          {project.stack.map((tech) => (
+                            <span
+                              key={tech}
+                              className="px-2 py-0.5 rounded-md bg-[#F4F6FC] text-[#5B48EE] text-[11px] font-medium border border-indigo-100/60"
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Card Footer: Metadata & Launch Action */}
+                      <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                        <div className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Est: {project.estTime}</span>
+                        </div>
+
+                        <button
+                          onClick={() => setActiveChallengeModal(project.title)}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#5B48EE] hover:bg-[#4A37D6] text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition-all group-hover:translate-x-0.5"
+                        >
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                          <span>Launch Sandbox</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Empty State */}
+                {filteredProjects.length === 0 && (
+                  <div className="bg-white rounded-3xl p-12 text-center border border-slate-200">
+                    <FolderGit2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                    <h3 className="text-base font-bold text-slate-800">No projects found</h3>
+                    <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                      No repository matched "{projectSearch}" in the "{projectFilterChip}" category. Try adjusting your search query or clear filters.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setProjectSearch('');
+                        setProjectFilterChip('all');
+                      }}
+                      className="mt-4 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700 transition-colors"
+                    >
+                      Reset All Filters
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* ------------------------------------------------------------------- */}
+            {/* TAB 3: PRACTICE VIEW (Blueprint Modes & Live Repos)                 */}
             {/* ------------------------------------------------------------------- */}
             {activeNav === 'Practice' && (
               <motion.div
@@ -1079,7 +1629,7 @@ function DashboardView() {
             )}
 
             {/* ------------------------------------------------------------------- */}
-            {/* TAB 3: CHALLENGES CATALOG                                           */}
+            {/* TAB 4: CHALLENGES CATALOG                                           */}
             {/* ------------------------------------------------------------------- */}
             {activeNav === 'Challenges' && (
               <motion.div
@@ -1168,7 +1718,7 @@ function DashboardView() {
             )}
 
             {/* ------------------------------------------------------------------- */}
-            {/* TAB 4: ASSESSMENTS (TCS, Infosys, Wipro, Product Mocks)             */}
+            {/* TAB 5: ASSESSMENTS (TCS, Infosys, Wipro, Product Mocks)             */}
             {/* ------------------------------------------------------------------- */}
             {activeNav === 'Assessments' && (
               <motion.div
@@ -1270,7 +1820,7 @@ function DashboardView() {
             )}
 
             {/* ------------------------------------------------------------------- */}
-            {/* TAB 5: PROGRESS & PERFORMANCE ANALYTICS                             */}
+            {/* TAB 6: PROGRESS & PERFORMANCE ANALYTICS                             */}
             {/* ------------------------------------------------------------------- */}
             {activeNav === 'Progress' && (
               <motion.div
@@ -1387,7 +1937,7 @@ function DashboardView() {
             )}
 
             {/* ------------------------------------------------------------------- */}
-            {/* TAB 6: AI ASSISTANT & PROMPT EFFICIENCY LAB                         */}
+            {/* TAB 7: AI ASSISTANT & PROMPT EFFICIENCY LAB                         */}
             {/* ------------------------------------------------------------------- */}
             {activeNav === 'AI Assistant' && (
               <motion.div
@@ -1535,7 +2085,7 @@ function DashboardView() {
             )}
 
             {/* ------------------------------------------------------------------- */}
-            {/* TAB 7: RESOURCES & CHEATSHEETS                                      */}
+            {/* TAB 8: RESOURCES & CHEATSHEETS                                      */}
             {/* ------------------------------------------------------------------- */}
             {activeNav === 'Resources' && (
               <motion.div
@@ -1625,7 +2175,7 @@ function DashboardView() {
             )}
 
             {/* ------------------------------------------------------------------- */}
-            {/* TAB 8: COMMUNITY & LEADERBOARD                                      */}
+            {/* TAB 9: COMMUNITY & LEADERBOARD                                      */}
             {/* ------------------------------------------------------------------- */}
             {activeNav === 'Community' && (
               <motion.div
@@ -1753,7 +2303,181 @@ function DashboardView() {
       </div>
 
       {/* ========================================================================= */}
-      {/* 4. INTERACTIVE CHALLENGE MODAL                                            */}
+      {/* 4. "IMPORT YOUR OWN PROJECT" MODAL (Coming Soon in MVP)                   */}
+      {/* ========================================================================= */}
+      {importModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0C0B24] border border-[#2B2360] text-white rounded-3xl w-full max-w-xl p-7 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+            <button
+              onClick={() => setImportModalOpen(false)}
+              className="absolute top-5 right-5 text-slate-400 hover:text-white p-2 rounded-xl bg-[#1C1844] transition-colors"
+              aria-label="Close modal"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {/* Modal Header */}
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-[#5B48EE] flex items-center justify-center text-white">
+                <Upload className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-bold text-white">Import Your Own Project</h3>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-bold">
+                    Coming Soon in v1.1
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400">Bring your GitHub repository or local ZIP archive into DevPractice.</p>
+              </div>
+            </div>
+
+            {/* Tabs: GitHub vs ZIP */}
+            <div className="flex border-b border-[#251E52] my-4 gap-4 text-xs font-bold">
+              <button
+                onClick={() => setImportTab('github')}
+                className={`pb-2.5 flex items-center gap-2 border-b-2 transition-all ${
+                  importTab === 'github'
+                    ? 'border-[#5B48EE] text-white'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
+                </svg>
+                <span>GitHub Repository</span>
+              </button>
+              <button
+                onClick={() => setImportTab('zip')}
+                className={`pb-2.5 flex items-center gap-2 border-b-2 transition-all ${
+                  importTab === 'zip'
+                    ? 'border-[#5B48EE] text-white'
+                    : 'border-transparent text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <FileArchive className="w-4 h-4" />
+                <span>ZIP Codebase Archive</span>
+              </button>
+            </div>
+
+            {/* Tab 1: GitHub URL Form */}
+            {importTab === 'github' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-300 block mb-1.5">
+                    Repository URL:
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://github.com/username/repository"
+                    value={importGithubUrl}
+                    onChange={(e) => setImportGithubUrl(e.target.value)}
+                    className="w-full bg-[#151239] border border-[#2D2568] focus:border-[#5B48EE] rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 outline-none"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-300 block mb-1.5">Default Branch:</label>
+                    <input
+                      type="text"
+                      defaultValue="main"
+                      className="w-full bg-[#151239] border border-[#2D2568] rounded-xl px-3 py-2 text-xs text-slate-300 outline-none font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-300 block mb-1.5">Primary Runtime:</label>
+                    <select className="w-full bg-[#151239] border border-[#2D2568] rounded-xl px-3 py-2 text-xs text-slate-300 outline-none">
+                      <option>Auto-Detect (Dockerfile/package.json)</option>
+                      <option>Node.js 20 LTS</option>
+                      <option>Python 3.11</option>
+                      <option>Java 17 OpenJDK</option>
+                      <option>Go 1.22</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 2: ZIP File Drag & Drop */}
+            {importTab === 'zip' && (
+              <div className="border-2 border-dashed border-[#342A75] rounded-2xl p-6 text-center bg-[#151239]/60 hover:bg-[#151239] transition-colors cursor-pointer">
+                <FileArchive className="w-10 h-10 text-[#8E7CFF] mx-auto mb-2" />
+                <p className="text-xs font-bold text-white">Drag and drop your project .zip archive here</p>
+                <p className="text-[10px] text-slate-400 mt-1">Maximum file size: 50MB. node_modules should be excluded.</p>
+                <button
+                  type="button"
+                  onClick={() => alert('ZIP Upload: Will be enabled in v1.1. Enter your email below to get early access.')}
+                  className="mt-3 px-4 py-1.5 bg-[#251E56] hover:bg-[#322872] text-xs font-bold text-white rounded-lg border border-[#3E338A] transition-colors"
+                >
+                  Browse Local Files
+                </button>
+              </div>
+            )}
+
+            {/* "Coming Soon" Feature Explanation & Early Access Notification */}
+            <div className="mt-5 p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-[#3C2E7D] text-xs">
+              <div className="flex items-start gap-2.5">
+                <Info className="w-4 h-4 text-[#A69BFF] flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold text-white">How Custom Repository Import Works:</p>
+                  <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+                    DevPractice's container engine isolates your repository, automatically scans route definitions and tests, and synthesizes <strong>synthetic bugs</strong> and <strong>prompt challenges</strong> tailored to your code.
+                  </p>
+                </div>
+              </div>
+
+              {/* Waitlist Box */}
+              <div className="mt-4 pt-3 border-t border-[#31256E]">
+                {waitlistSuccess ? (
+                  <div className="p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold text-center">
+                    ✓ You're on the early access list! We'll notify you when custom imports go live.
+                  </div>
+                ) : (
+                  <form onSubmit={handleJoinWaitlist} className="flex gap-2">
+                    <input
+                      type="email"
+                      required
+                      value={waitlistEmail}
+                      onChange={(e) => setWaitlistEmail(e.target.value)}
+                      placeholder="Enter email to get notified when v1.1 launches..."
+                      className="flex-1 bg-[#0E0A2A] border border-[#2D2568] rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 outline-none focus:border-[#5B48EE]"
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-[#5B48EE] hover:bg-[#6D5CF6] text-white text-xs font-bold rounded-xl transition-colors shadow-md shadow-indigo-500/30 flex-shrink-0"
+                    >
+                      Join Waitlist
+                    </button>
+                  </form>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-3 mt-5">
+              <button
+                onClick={() => setImportModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  alert('Custom project import is currently in private beta testing. You will be notified when public beta opens in v1.1.');
+                  setImportModalOpen(false);
+                }}
+                className="px-5 py-2 rounded-xl bg-[#5B48EE] hover:bg-[#6D5CF6] text-white text-xs font-bold transition-all shadow-md shadow-indigo-500/25 flex items-center gap-1.5"
+              >
+                <span>Request Early Access</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 5. INTERACTIVE CHALLENGE MODAL                                            */}
       {/* ========================================================================= */}
       {activeChallengeModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
