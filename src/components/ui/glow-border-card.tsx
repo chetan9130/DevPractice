@@ -16,7 +16,7 @@ export function GlowBorderCard({
   className,
   borderRadius = '1.25rem',
   animationDuration = 5,
-  glowColor = '#5B48EE',
+  glowColor = '#8C60F3',
   style,
   ...props
 }: GlowBorderCardProps) {
@@ -32,14 +32,14 @@ export function GlowBorderCard({
       }}
       {...props}
     >
-      {/* VengeanceUI Animated Conic Border */}
+      {/* VengeanceUI Animated Conic Border with Palette Colors */}
       <div
-        className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,#5B48EE_0deg,#8E7CFF_90deg,#06B6D4_180deg,#8E7CFF_270deg,#5B48EE_360deg)] animate-[spin_6s_linear_infinite] opacity-40 group-hover:opacity-100 transition-opacity duration-500"
+        className="absolute inset-[-100%] bg-[conic-gradient(from_0deg,#8C60F3_0deg,#E4E0EC_90deg,#8C60F3_180deg,#353148_270deg,#8C60F3_360deg)] animate-[spin_6s_linear_infinite] opacity-40 group-hover:opacity-100 transition-opacity duration-500"
       />
 
       {/* Inner Card Content */}
       <div
-        className="relative z-10 w-full h-full bg-[#0D0B1E] rounded-[inherit] p-6 text-white"
+        className="relative z-10 w-full h-full bg-[#201D33] rounded-[inherit] p-6 text-white"
         style={{ borderRadius: `calc(${borderRadius} - 1px)` }}
       >
         {children}

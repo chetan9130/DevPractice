@@ -3,16 +3,31 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 248, 250, 252;
-  --background-start-rgb: 11, 10, 22;
-  --background-end-rgb: 16, 14, 35;
+  --bg-canvas: #F8F6FC;
+  --text-main: #353148;
+  --text-muted: #8E8A9C;
+  --border-subtle: #E4E0EC;
+  --brand-purple: #7038F0;
+  --brand-purple-hover: #5E26E5;
+  --brand-purple-text: #6928ED;
+}
+
+html.dark, body.dark, [data-theme="dark"] {
+  --bg-canvas: #0B0914;
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --border-subtle: rgba(255, 255, 255, 0.1);
+  --brand-purple: #8C60F3;
+  --brand-purple-hover: #7A4AEB;
+  --brand-purple-text: #A78BFA;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: #0B0A16;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow-x: hidden;
+  background-color: var(--bg-canvas);
+  color: var(--text-main);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Custom subtle scrollbar */
@@ -22,16 +37,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B0A16;
+  background: var(--bg-canvas);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #25234A;
+  background: var(--border-subtle);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #7C3AED;
+  background: var(--brand-purple);
 }
 
 /* Glassmorphism utility */
@@ -46,8 +61,8 @@ body {
   background: rgba(18, 16, 36, 0.85);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(124, 58, 237, 0.28);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(124, 58, 237, 0.2);
+  border: 1px solid rgba(140, 96, 243, 0.35);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px rgba(140, 96, 243, 0.25);
 }
 
 /* Glowing text gradient */
@@ -102,4 +117,23 @@ body {
 
 .animate-pulse-border {
   animation: pulseBorder 3s ease-in-out infinite;
+}
+
+/* Starry Sky Animation */
+@keyframes slide-transparency {
+  0% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.25;
+  }
+}
+
+.animate-opacity {
+  animation-name: slide-transparency;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
 }

@@ -57,17 +57,17 @@ function LoginForm() {
   return (
     <div className="w-full max-w-md mx-auto">
       {/* Auth Card */}
-      <div className="glass-panel-glow rounded-3xl p-8 relative overflow-hidden">
+      <div className="rounded-3xl p-8 relative overflow-hidden bg-white/95 dark:bg-[#121026]/90 border border-[#E4E0EC] dark:border-white/10 shadow-xl dark:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5),0_0_20px_-5px_rgba(140,96,243,0.25)] backdrop-blur-md transition-colors duration-200">
         {/* Subtle top ambient glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-2 bg-gradient-to-r from-dev-purple to-dev-indigo blur-sm" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-1.5 bg-gradient-to-r from-[#7038F0] dark:from-[#8C60F3] to-[#6366F1] blur-xs" />
 
         {/* Card Header */}
         <div className="text-center mb-7">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-dev-purple/30 to-dev-indigo/30 border border-dev-purple/40 mb-3 text-purple-300 shadow-glow-purple">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#7038F0]/10 dark:bg-[#8C60F3]/15 border border-[#7038F0]/20 dark:border-[#8C60F3]/30 mb-3 text-[#7038F0] dark:text-[#A78BFA] shadow-xs">
             <Code2 className="w-6 h-6" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Welcome Back</h1>
-          <p className="text-xs text-dev-muted mt-1.5">
+          <h1 className="text-2xl font-bold tracking-tight text-[#353148] dark:text-white">Welcome Back</h1>
+          <p className="text-xs text-[#8E8A9C] dark:text-slate-400 mt-1.5">
             Log in to continue debugging real projects & practicing with AI
           </p>
         </div>
@@ -77,8 +77,8 @@ function LoginForm() {
 
         {/* Divider */}
         <div className="relative my-6 flex items-center justify-center">
-          <div className="w-full border-t border-dev-border/70" />
-          <span className="bg-dev-card px-3 text-[11px] font-medium text-dev-muted uppercase tracking-wider absolute">
+          <div className="w-full border-t border-[#E4E0EC] dark:border-white/10" />
+          <span className="bg-white dark:bg-[#121026] px-3 text-[11px] font-medium text-[#8E8A9C] dark:text-slate-400 uppercase tracking-wider absolute">
             Or sign in with email
           </span>
         </div>
@@ -87,16 +87,16 @@ function LoginForm() {
         <button
           type="button"
           onClick={fillDemoAccount}
-          className="w-full mb-4 py-2 px-3 rounded-xl bg-dev-purple/10 hover:bg-dev-purple/15 border border-dev-purple/30 text-xs font-medium text-purple-300 flex items-center justify-center gap-1.5 transition-all group"
+          className="w-full mb-4 py-2 px-3 rounded-xl bg-[#7038F0]/10 hover:bg-[#7038F0]/15 dark:bg-[#8C60F3]/15 dark:hover:bg-[#8C60F3]/25 border border-[#7038F0]/20 dark:border-[#8C60F3]/30 text-xs font-semibold text-[#7038F0] dark:text-[#A78BFA] flex items-center justify-center gap-1.5 transition-all group"
         >
-          <Sparkles className="w-3.5 h-3.5 text-dev-purple group-hover:scale-110 transition-transform" />
+          <Sparkles className="w-3.5 h-3.5 text-[#7038F0] dark:text-[#A78BFA] group-hover:scale-110 transition-transform" />
           <span>Quick Fill: Demo Learner Account</span>
         </button>
 
         {/* Error Alert */}
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+          <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-300 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
             <span>{error}</span>
           </div>
         )}
@@ -104,11 +104,11 @@ function LoginForm() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-dev-text mb-1.5">
+            <label className="block text-xs font-semibold text-[#353148] dark:text-slate-200 mb-1.5">
               Email Address
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-dev-muted">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8E8A9C] dark:text-slate-500">
                 <Mail className="w-4 h-4" />
               </div>
               <input
@@ -117,24 +117,24 @@ function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@college.edu or company.com"
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-dev-surface/90 border border-dev-border focus:border-dev-purple focus:ring-1 focus:ring-dev-purple text-sm text-white placeholder-dev-muted/60 transition-all outline-none"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#F8F6FC] dark:bg-[#1B1939]/80 border border-[#E4E0EC] dark:border-white/10 focus:border-[#7038F0] dark:focus:border-[#8C60F3] focus:ring-1 focus:ring-[#7038F0] dark:focus:ring-[#8C60F3] text-sm text-[#353148] dark:text-white placeholder-[#8E8A9C] dark:placeholder-slate-500 transition-all outline-none"
               />
             </div>
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-medium text-dev-text">Password</label>
+              <label className="text-xs font-semibold text-[#353148] dark:text-slate-200">Password</label>
               <button
                 type="button"
                 onClick={() => alert('Password reset link simulated! Please use the demo account or sign in directly.')}
-                className="text-[11px] text-purple-400 hover:text-purple-300 font-medium transition-colors"
+                className="text-[11px] text-[#7038F0] dark:text-[#A78BFA] hover:text-[#5E26E5] dark:hover:text-[#C4B5FD] font-semibold transition-colors"
               >
                 Forgot password?
               </button>
             </div>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-dev-muted">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8E8A9C] dark:text-slate-500">
                 <Lock className="w-4 h-4" />
               </div>
               <input
@@ -143,12 +143,12 @@ function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-dev-surface/90 border border-dev-border focus:border-dev-purple focus:ring-1 focus:ring-dev-purple text-sm text-white placeholder-dev-muted/60 transition-all outline-none"
+                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-[#F8F6FC] dark:bg-[#1B1939]/80 border border-[#E4E0EC] dark:border-white/10 focus:border-[#7038F0] dark:focus:border-[#8C60F3] focus:ring-1 focus:ring-[#7038F0] dark:focus:ring-[#8C60F3] text-sm text-[#353148] dark:text-white placeholder-[#8E8A9C] dark:placeholder-slate-500 transition-all outline-none"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-dev-muted hover:text-white"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[#8E8A9C] hover:text-[#353148] dark:hover:text-white"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -160,9 +160,9 @@ function LoginForm() {
               id="remember-me"
               type="checkbox"
               defaultChecked
-              className="h-4 w-4 rounded border-dev-border bg-dev-surface text-dev-purple focus:ring-dev-purple focus:ring-offset-0"
+              className="h-4 w-4 rounded border-[#E4E0EC] dark:border-white/20 bg-white dark:bg-[#1B1939] text-[#7038F0] dark:text-[#8C60F3] focus:ring-[#7038F0] dark:focus:ring-[#8C60F3] focus:ring-offset-0"
             />
-            <label htmlFor="remember-me" className="ml-2 block text-xs text-dev-muted cursor-pointer">
+            <label htmlFor="remember-me" className="ml-2 block text-xs text-[#8E8A9C] dark:text-slate-400 cursor-pointer">
               Remember my session on this device
             </label>
           </div>
@@ -170,7 +170,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 px-4 rounded-xl bg-dev-gradient hover:opacity-95 text-white font-medium text-sm flex items-center justify-center gap-2 shadow-glow-purple transition-all duration-200 active:scale-[0.99] disabled:opacity-50 mt-2"
+            className="w-full py-2.5 px-4 rounded-xl bg-[#7038F0] hover:bg-[#5E26E5] dark:bg-[#8C60F3] dark:hover:bg-[#7A4AEB] text-white font-semibold text-sm flex items-center justify-center gap-2 shadow-md shadow-[#7038F0]/20 dark:shadow-lg dark:shadow-[#8C60F3]/30 transition-all duration-200 active:scale-[0.99] disabled:opacity-50 mt-2"
           >
             {loading ? (
               <>
@@ -187,11 +187,11 @@ function LoginForm() {
         </form>
 
         {/* Footer Link */}
-        <div className="text-center mt-6 text-xs text-dev-muted">
+        <div className="text-center mt-6 text-xs text-[#8E8A9C] dark:text-slate-400">
           Don&apos;t have an account?{' '}
           <Link
             href="/signup"
-            className="font-semibold text-purple-400 hover:text-purple-300 transition-colors"
+            className="font-semibold text-[#7038F0] dark:text-[#A78BFA] hover:text-[#5E26E5] dark:hover:text-[#C4B5FD] transition-colors"
           >
             Create an account
           </Link>
@@ -203,14 +203,14 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 relative">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12 relative bg-[#F8F6FC] dark:bg-[#0B0914] transition-colors duration-200">
       {/* Background radial gradient glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-dev-purple/15 rounded-full blur-[130px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-[#8C60F3]/10 dark:bg-[#8C60F3]/15 rounded-full blur-[130px] pointer-events-none" />
 
       <Suspense
         fallback={
-          <div className="flex items-center justify-center text-dev-muted text-sm">
-            <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading...
+          <div className="flex items-center justify-center text-[#8E8A9C] text-sm">
+            <Loader2 className="w-5 h-5 animate-spin mr-2 text-[#8C60F3]" /> Loading...
           </div>
         }
       >
