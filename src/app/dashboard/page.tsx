@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { StatsCounter } from '@/components/ui/stats-counter';
+import IDEWorkspace from '@/components/ide/IDEWorkspace';
 import {
   LayoutDashboard,
   Code2,
@@ -59,6 +60,17 @@ function DashboardView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [activeChallengeModal, setActiveChallengeModal] = useState<string | null>(null);
+  const [selectedChallengeForIDE, setSelectedChallengeForIDE] = useState<string>('jwt-auth-challenge');
+
+  const mapChallengeTitleToId = (title: string): string => {
+    const lower = title.toLowerCase();
+    if (lower.includes('jwt') || lower.includes('auth')) return 'jwt-auth-challenge';
+    if (lower.includes('race') || lower.includes('cart') || lower.includes('python')) return 'python-race-condition';
+    if (lower.includes('pagination') || lower.includes('spring') || lower.includes('java')) return 'java-pagination-api';
+    if (lower.includes('lru') || lower.includes('cache') || lower.includes('redis')) return 'cpp-lru-cache';
+    if (lower.includes('packet') || lower.includes('docker') || lower.includes('buffer')) return 'c-packet-parser';
+    return 'ts-state-machine';
+  };
 
   // Daily goals state
   const [dailyGoals, setDailyGoals] = useState([
@@ -150,6 +162,7 @@ function DashboardView() {
 
   const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard },
+    { name: 'IDE Workspace', icon: Terminal },
     { name: 'Practice', icon: Code2 },
     { name: 'Challenges', icon: Layers },
     { name: 'Assessments', icon: ClipboardList },
@@ -158,6 +171,16 @@ function DashboardView() {
     { name: 'Resources', icon: BookOpen },
     { name: 'Community', icon: Users },
   ];
+
+  if (activeNav === 'IDE Workspace') {
+    return (
+      <IDEWorkspace
+        initialChallengeId={selectedChallengeForIDE}
+        onExitWorkspace={() => setActiveNav('Dashboard')}
+        onNavigateTab={(tab) => setActiveNav(tab)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F4F6FC] flex font-sans antialiased text-slate-800">
@@ -1806,7 +1829,11 @@ function DashboardView() {
               </button>
               <button
                 onClick={() => {
-                  alert(`Spawning container workspace for "${activeChallengeModal}". Redirecting to IDE sandbox...`);
+                  if (activeChallengeModal) {
+                    const id = mapChallengeTitleToId(activeChallengeModal);
+                    setSelectedChallengeForIDE(id);
+                    setActiveNav('IDE Workspace');
+                  }
                   setActiveChallengeModal(null);
                 }}
                 className="px-6 py-2.5 rounded-xl bg-[#5B48EE] hover:bg-[#6D5CF6] text-white text-xs font-bold shadow-lg shadow-indigo-500/40 transition-all flex items-center gap-2"

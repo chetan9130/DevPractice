@@ -1,0 +1,288 @@
+'use client';
+
+import React, { useState } from 'react';
+import { Challenge, EditorSettings } from '@/types/ide';
+import {
+  Play,
+  Send,
+  Save,
+  Sun,
+  Maximize2,
+  Minimize2,
+  ChevronDown,
+  Loader2,
+  SplitSquareVertical,
+  RotateCcw,
+  X,
+} from 'lucide-react';
+
+interface TopToolbarProps {
+  challenge: Challenge;
+  challenges: Challenge[];
+  onSelectChallenge: (challengeId: string) => void;
+  isRunning: boolean;
+  isSaving: boolean;
+  hasDirtyFiles: boolean;
+  isDiffActive: boolean;
+  settings: EditorSettings;
+  onRunCode: () => void;
+  onRunTests: () => void;
+  onSubmit: () => void;
+  onSave: () => void;
+  onToggleDiff: () => void;
+  onResetChallenge: () => void;
+  onUpdateSettings: (newSettings: Partial<EditorSettings>) => void;
+}
+
+const LANGUAGE_LABELS: Record<string, string> = {
+  javascript: 'JavaScript',
+  typescript: 'TypeScript',
+  python: 'Python',
+  java: 'Java',
+  c: 'C',
+  cpp: 'C++',
+};
+
+export default function TopToolbar({
+  challenge,
+  challenges,
+  onSelectChallenge,
+  isRunning,
+  isSaving,
+  hasDirtyFiles,
+  isDiffActive,
+  settings,
+  onRunCode,
+  onRunTests,
+  onSubmit,
+  onSave,
+  onToggleDiff,
+  onResetChallenge,
+  onUpdateSettings,
+}: TopToolbarProps) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (typeof document !== 'undefined') {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+        setIsFullscreen(true);
+      } else {
+        document.exitFullscreen().catch(() => {});
+        setIsFullscreen(false);
+      }
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between px-3 py-2 bg-[#0D0B1E] border-b border-[#1E1A3A] text-xs select-none">
+      {/* Left Action Buttons: Run, Run Tests, Submit, Save */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* Green Run Button */}
+        <button
+          onClick={onRunCode}
+          disabled={isRunning}
+          className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-[#10B981] to-[#059669] hover:brightness-110 text-white font-bold text-xs shadow-lg shadow-emerald-500/25 transition-all active:scale-95 disabled:opacity-50"
+        >
+          {isRunning ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+          ) : (
+            <Play className="w-3.5 h-3.5 fill-current" />
+          )}
+          <span>Run</span>
+        </button>
+
+        {/* Purple Run Tests Button */}
+        <button
+          onClick={onRunTests}
+          disabled={isRunning}
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#271C60] hover:bg-[#33257B] border border-[#5642B8] text-white font-semibold text-xs shadow-md shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-50"
+        >
+          <Play className="w-3.5 h-3.5 text-[#A69BFF]" />
+          <span>Run Tests</span>
+        </button>
+
+        {/* Submit Button */}
+        <button
+          onClick={onSubmit}
+          disabled={isRunning}
+          className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#16132E] hover:bg-[#211C44] border border-[#2B2554] text-slate-200 hover:text-white font-semibold text-xs transition-all active:scale-95"
+        >
+          <Send className="w-3.5 h-3.5 text-slate-300" />
+          <span>Submit</span>
+        </button>
+
+        {/* Save Button */}
+        <button
+          onClick={onSave}
+          disabled={isSaving}
+          className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border font-semibold text-xs transition-all active:scale-95 ${
+            hasDirtyFiles
+              ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
+              : 'bg-[#16132E] hover:bg-[#211C44] border-[#2B2554] text-slate-200 hover:text-white'
+          }`}
+          title="Save (Ctrl+S)"
+        >
+          {isSaving ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+          ) : (
+            <Save className="w-3.5 h-3.5 text-slate-300" />
+          )}
+          <span>Save</span>
+          {hasDirtyFiles && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />}
+        </button>
+
+        {isDiffActive && (
+          <button
+            onClick={onToggleDiff}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-purple-900/30 border border-purple-500/40 text-[#A69BFF] hover:text-white text-xs font-semibold"
+          >
+            <SplitSquareVertical className="w-3.5 h-3.5" />
+            <span>Close Diff</span>
+          </button>
+        )}
+      </div>
+
+      {/* Right Controls: Language Selector, Theme/Settings, Fullscreen */}
+      <div className="flex items-center gap-2">
+        <div className="hidden sm:flex items-center gap-2 relative">
+          <span className="text-slate-400 text-xs">Language:</span>
+          <button
+            onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+            className="flex items-center justify-between gap-2 px-3 py-1.5 rounded-xl bg-[#16132E] hover:bg-[#1F1B3F] border border-[#2B2554] text-white font-medium text-xs min-w-[115px] transition-colors"
+          >
+            <span>{LANGUAGE_LABELS[challenge.language] || 'JavaScript'}</span>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+          </button>
+
+          {langDropdownOpen && (
+            <div className="absolute top-full right-0 mt-1.5 w-64 bg-[#120E2E] border border-[#2E2564] rounded-2xl shadow-2xl py-1.5 z-50">
+              <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-[#221B4B]">
+                Switch Challenge / Language
+              </div>
+              {challenges.map((c) => (
+                <button
+                  key={c.id}
+                  onClick={() => {
+                    onSelectChallenge(c.id);
+                    setLangDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 flex items-center justify-between hover:bg-[#1E1849] transition-colors ${
+                    c.id === challenge.id ? 'bg-[#1E1849] text-white font-bold' : 'text-slate-300'
+                  }`}
+                >
+                  <div className="truncate pr-2">
+                    <div className="text-xs font-semibold">{LANGUAGE_LABELS[c.language]}</div>
+                    <div className="text-[10px] text-slate-400 truncate">{c.title}</div>
+                  </div>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-900/40 text-purple-300">
+                    {c.difficulty}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Settings / Theme Popover Trigger */}
+        <div className="relative">
+          <button
+            onClick={() => setSettingsOpen(!settingsOpen)}
+            className="p-1.5 rounded-xl bg-[#16132E] hover:bg-[#211C44] border border-[#2B2554] text-slate-300 hover:text-white transition-colors"
+            title="Editor Appearance & Settings"
+          >
+            <Sun className="w-4 h-4" />
+          </button>
+
+          {settingsOpen && (
+            <div className="absolute top-full right-0 mt-2 w-64 bg-[#120E2E] border border-[#2E2564] rounded-2xl shadow-2xl p-4 z-50 text-slate-200 space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-[#221B4B]">
+                <span className="font-bold text-xs text-white">Editor Settings</span>
+                <button
+                  onClick={() => setSettingsOpen(false)}
+                  className="text-slate-400 hover:text-white"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Font Size:</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() =>
+                      onUpdateSettings({ fontSize: Math.max(settings.fontSize - 1, 11) })
+                    }
+                    className="w-6 h-6 rounded bg-[#1D1746] hover:bg-[#282060] text-white font-bold"
+                  >
+                    -
+                  </button>
+                  <span className="font-mono text-white">{settings.fontSize}px</span>
+                  <button
+                    onClick={() =>
+                      onUpdateSettings({ fontSize: Math.min(settings.fontSize + 1, 22) })
+                    }
+                    className="w-6 h-6 rounded bg-[#1D1746] hover:bg-[#282060] text-white font-bold"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Minimap:</span>
+                <button
+                  onClick={() => onUpdateSettings({ minimap: !settings.minimap })}
+                  className={`px-2.5 py-0.5 rounded text-xs font-semibold ${
+                    settings.minimap
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                      : 'bg-[#1D1746] text-slate-400'
+                  }`}
+                >
+                  {settings.minimap ? 'On' : 'Off'}
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Theme:</span>
+                <select
+                  value={settings.theme}
+                  onChange={(e) => onUpdateSettings({ theme: e.target.value as any })}
+                  className="bg-[#1D1746] border border-[#2E2564] text-white text-xs rounded-lg px-2 py-1 outline-none"
+                >
+                  <option value="devpractice-dark">DevPractice Dark</option>
+                  <option value="vs-dark">VS Code Dark</option>
+                  <option value="light">Light</option>
+                </select>
+              </div>
+
+              <div className="pt-2 border-t border-[#221B4B] flex justify-end">
+                <button
+                  onClick={() => {
+                    onResetChallenge();
+                    setSettingsOpen(false);
+                  }}
+                  className="flex items-center gap-1 text-[11px] text-rose-400 hover:text-rose-300"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Reset Template Code</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Fullscreen Toggle */}
+        <button
+          onClick={toggleFullscreen}
+          className="p-1.5 rounded-xl bg-[#16132E] hover:bg-[#211C44] border border-[#2B2554] text-slate-300 hover:text-white transition-colors"
+          title="Toggle Fullscreen"
+        >
+          {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+        </button>
+      </div>
+    </div>
+  );
+}
