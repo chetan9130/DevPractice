@@ -149,12 +149,21 @@ export default function Navbar() {
                   </div>
 
                   <Link
+                    href="/dashboard?view=ide"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#353148] dark:text-slate-200 hover:bg-[#F8F6FC] dark:hover:bg-white/[0.06] transition-colors font-medium text-xs text-[#7038F0] dark:text-[#A78BFA]"
+                  >
+                    <Code2 className="w-4 h-4 text-[#7038F0] dark:text-[#8C60F3]" />
+                    <span>Launch IDE Workspace</span>
+                  </Link>
+
+                  <Link
                     href="/dashboard"
                     onClick={() => setDropdownOpen(false)}
                     className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#353148] dark:text-slate-200 hover:bg-[#F8F6FC] dark:hover:bg-white/[0.06] transition-colors"
                   >
                     <LayoutDashboard className="w-4 h-4 text-[#7038F0] dark:text-[#8C60F3]" />
-                    <span>Workspace Dashboard</span>
+                    <span>Dashboard & Analytics</span>
                   </Link>
 
                   <Link

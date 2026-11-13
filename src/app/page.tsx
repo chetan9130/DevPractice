@@ -47,6 +47,24 @@ export default function LandingPage() {
   const { isAuthenticated, isOnboarded } = useAuth();
   const router = useRouter();
 
+  // If already logged in, by default this dashboard page should open
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      if (!isOnboarded) {
+        router.push('/onboarding');
+      } else {
+        const savedNav = typeof window !== 'undefined' ? localStorage.getItem('devpractice_active_nav') : null;
+        if (savedNav && savedNav === 'IDE Workspace') {
+          router.push('/dashboard?view=ide');
+        } else if (savedNav && savedNav !== 'Dashboard') {
+          router.push(`/dashboard?tab=${encodeURIComponent(savedNav)}`);
+        } else {
+          router.push('/dashboard');
+        }
+      }
+    }
+  }, [isAuthenticated, isOnboarded, router]);
+
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [modalActionContext, setModalActionContext] = useState({
     title: 'Sign In to Access DevPractice Workspace',
@@ -175,7 +193,7 @@ export default function LandingPage() {
                 <span>Timer: 42:15</span>
               </div>
               <button
-                onClick={() => handleProtectedAction('/dashboard', 'Submission Engine')}
+                onClick={() => handleProtectedAction('/dashboard?view=ide', 'Submission Engine')}
                 className="px-3.5 py-1 rounded-lg bg-[#7038F0] hover:bg-[#5E26E5] dark:bg-[#8C60F3] dark:hover:bg-[#7A4AEB] text-white text-[11px] font-bold transition-all shadow-xs"
               >
                 Submit Code
@@ -540,7 +558,7 @@ export default function LandingPage() {
                 </div>
 
                 <button
-                  onClick={() => handleProtectedAction('/dashboard', 'Debugging Round Workspace')}
+                  onClick={() => handleProtectedAction('/dashboard?view=ide', 'Debugging Round Workspace')}
                   className="px-6 py-3 rounded-xl bg-[#7038F0] hover:bg-[#5E26E5] dark:bg-[#8C60F3] dark:hover:bg-[#7A4AEB] text-white text-xs font-semibold flex items-center gap-2 shadow-sm transition-all"
                 >
                   <Play className="w-3.5 h-3.5 fill-white" />
@@ -579,7 +597,7 @@ export default function LandingPage() {
                 </p>
 
                 <button
-                  onClick={() => handleProtectedAction('/dashboard', 'Environment Rescue Workspace')}
+                  onClick={() => handleProtectedAction('/dashboard?view=ide', 'Environment Rescue Workspace')}
                   className="px-6 py-3 rounded-xl bg-[#7038F0] hover:bg-[#5E26E5] dark:bg-[#8C60F3] dark:hover:bg-[#7A4AEB] text-white text-xs font-semibold flex items-center gap-2 shadow-sm transition-all"
                 >
                   <Play className="w-3.5 h-3.5 fill-white" />
@@ -613,7 +631,7 @@ export default function LandingPage() {
                 </p>
 
                 <button
-                  onClick={() => handleProtectedAction('/dashboard', 'Feature Implementation Workspace')}
+                  onClick={() => handleProtectedAction('/dashboard?view=ide', 'Feature Implementation Workspace')}
                   className="px-6 py-3 rounded-xl bg-[#7038F0] hover:bg-[#5E26E5] dark:bg-[#8C60F3] dark:hover:bg-[#7A4AEB] text-white text-xs font-semibold flex items-center gap-2 shadow-sm transition-all"
                 >
                   <Play className="w-3.5 h-3.5 fill-white" />
@@ -649,7 +667,7 @@ export default function LandingPage() {
                 </p>
 
                 <button
-                  onClick={() => handleProtectedAction('/dashboard', 'Interview Simulation Assessment')}
+                  onClick={() => handleProtectedAction('/dashboard?view=ide', 'Interview Simulation Assessment')}
                   className="px-6 py-3 rounded-xl bg-[#7038F0] hover:bg-[#5E26E5] dark:bg-[#8C60F3] dark:hover:bg-[#7A4AEB] text-white text-xs font-semibold flex items-center gap-2 shadow-sm transition-all"
                 >
                   <Play className="w-3.5 h-3.5 fill-white" />

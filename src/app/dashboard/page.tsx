@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { StatsCounter } from '@/components/ui/stats-counter';
+import IDEWorkspace from '@/components/ide/IDEWorkspace';
 import {
   LayoutDashboard,
   Code2,
@@ -202,14 +203,84 @@ function DashboardView() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // Navigation and sidebar collapse states
-  const [activeNav, setActiveNav] = useState('Dashboard');
+  const viewParam = searchParams?.get('view');
+  const tabParam = searchParams?.get('tab');
+  const challengeParam = searchParams?.get('challenge');
+
+  // Navigation state - defaults to Dashboard (main landing dashboard), persists across page refresh
+  const [activeNav, setActiveNavState] = useState<string>(() => {
+    if (viewParam === 'ide') return 'IDE Workspace';
+    if (viewParam === 'dashboard') return 'Dashboard';
+    if (tabParam) return tabParam;
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('devpractice_active_nav');
+      if (stored) return stored;
+    }
+    return 'Dashboard';
+  });
+
+  // Dedicated setter that persists to localStorage and URL history without full reload
+  const setActiveNav = (nav: string) => {
+    setActiveNavState(nav);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('devpractice_active_nav', nav);
+      const url = new URL(window.location.href);
+      if (nav === 'IDE Workspace') {
+        url.searchParams.set('view', 'ide');
+        url.searchParams.delete('tab');
+      } else if (nav === 'Dashboard') {
+        url.searchParams.delete('view');
+        url.searchParams.delete('tab');
+      } else {
+        url.searchParams.delete('view');
+        url.searchParams.set('tab', nav);
+      }
+      window.history.replaceState(null, '', url.pathname + url.search);
+    }
+  };
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [activeChallengeModal, setActiveChallengeModal] = useState<string | null>(null);
+  const [selectedChallengeForIDE, setSelectedChallengeForIDE] = useState<string>(() => {
+    if (challengeParam) return challengeParam;
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('devpractice_active_challenge');
+      if (stored) return stored;
+    }
+    return 'jwt-auth-challenge';
+  });
+
+  useEffect(() => {
+    if (viewParam === 'ide') {
+      setActiveNavState('IDE Workspace');
+      if (typeof window !== 'undefined') localStorage.setItem('devpractice_active_nav', 'IDE Workspace');
+    } else if (viewParam === 'dashboard') {
+      setActiveNavState('Dashboard');
+      if (typeof window !== 'undefined') localStorage.setItem('devpractice_active_nav', 'Dashboard');
+    } else if (tabParam) {
+      setActiveNavState(tabParam);
+      if (typeof window !== 'undefined') localStorage.setItem('devpractice_active_nav', tabParam);
+    }
+    if (challengeParam) {
+      setSelectedChallengeForIDE(challengeParam);
+      if (typeof window !== 'undefined') localStorage.setItem('devpractice_active_challenge', challengeParam);
+    }
+  }, [viewParam, tabParam, challengeParam]);
+
+  const mapChallengeTitleToId = (title: string): string => {
+    const lower = title.toLowerCase();
+    if (lower.includes('jwt') || lower.includes('auth')) return 'jwt-auth-challenge';
+    if (lower.includes('race') || lower.includes('cart') || lower.includes('python')) return 'python-race-condition';
+    if (lower.includes('pagination') || lower.includes('spring') || lower.includes('java')) return 'java-pagination-api';
+    if (lower.includes('lru') || lower.includes('cache') || lower.includes('redis')) return 'cpp-lru-cache';
+    if (lower.includes('packet') || lower.includes('docker') || lower.includes('buffer')) return 'c-packet-parser';
+    return 'ts-state-machine';
+  };
 
   // Project Library state
   const [projectFilterChip, setProjectFilterChip] = useState<'all' | 'web' | 'backend' | 'ai' | 'devops'>('all');
@@ -340,6 +411,11 @@ function DashboardView() {
       badge: '24',
     },
     {
+      name: 'IDE Workspace',
+      icon: Terminal,
+      badge: 'LIVE',
+    },
+    {
       name: 'Projects',
       icon: FolderGit2,
       badge: '10',
@@ -404,6 +480,16 @@ function DashboardView() {
       p.stack.some((s) => s.toLowerCase().includes(projectSearch.toLowerCase()));
     return matchesChip && matchesSearch;
   });
+
+  if (activeNav === 'IDE Workspace') {
+    return (
+      <IDEWorkspace
+        initialChallengeId={selectedChallengeForIDE}
+        onExitWorkspace={() => setActiveNav('Dashboard')}
+        onNavigateTab={(tab) => setActiveNav(tab)}
+      />
+    );
+  }
 
   return (
     <div className="h-screen bg-[#F8F6FC] dark:bg-[#0B0914] flex font-sans antialiased text-[#353148] dark:text-slate-100 overflow-hidden transition-colors duration-200">
@@ -2556,7 +2642,11 @@ function DashboardView() {
               </button>
               <button
                 onClick={() => {
-                  alert(`Spawning container workspace for "${activeChallengeModal}". Redirecting to IDE sandbox...`);
+                  if (activeChallengeModal) {
+                    const id = mapChallengeTitleToId(activeChallengeModal);
+                    setSelectedChallengeForIDE(id);
+                    setActiveNav('IDE Workspace');
+                  }
                   setActiveChallengeModal(null);
                 }}
                 className="px-6 py-2.5 rounded-xl bg-[#8C60F3] hover:bg-[#7A4AEB] text-white text-xs font-bold shadow-lg shadow-[#8C60F3]/40 transition-all flex items-center gap-2"
@@ -2575,7 +2665,15 @@ function DashboardView() {
 export default function DashboardPage() {
   return (
     <ProtectedRoute>
-      <DashboardView />
+      <Suspense
+        fallback={
+          <div className="h-screen w-screen flex items-center justify-center bg-[#F8F6FC] dark:bg-[#0B0914]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#7038F0]" />
+          </div>
+        }
+      >
+        <DashboardView />
+      </Suspense>
     </ProtectedRoute>
   );
 }
