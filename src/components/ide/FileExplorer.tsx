@@ -159,8 +159,8 @@ export default function FileExplorer({
         onClick={() => onSelectFile(file.id)}
         className={`group flex items-center justify-between ${indentClass} pr-2.5 py-1.5 rounded-lg cursor-pointer transition-all ${
           isActive
-            ? 'bg-gradient-to-r from-[#2D1F6E] to-[#1F174E] text-white font-semibold shadow-sm border border-[#4E39B0]/50'
-            : 'text-slate-300 hover:text-white hover:bg-[#15122E]'
+            ? 'bg-[#7038F0]/10 dark:bg-[#7038F0]/25 text-[#7038F0] dark:text-white font-semibold shadow-xs border border-[#7038F0]/30 dark:border-[#8C60F3]/40'
+            : 'text-[#353148] dark:text-slate-300 hover:text-black dark:hover:text-white hover:bg-[#F8F6FC] dark:hover:bg-[#15122E]'
         }`}
       >
         <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -179,7 +179,7 @@ export default function FileExplorer({
               }}
               onBlur={handleConfirmRename}
               autoFocus
-              className="flex-1 bg-[#0C0920] text-white text-xs px-1.5 py-0.5 rounded border border-[#6C5CE7] outline-none font-mono"
+              className="flex-1 bg-white dark:bg-[#0C0920] text-[#353148] dark:text-white text-xs px-1.5 py-0.5 rounded border border-[#7038F0] outline-none font-mono"
             />
           ) : (
             <span className="truncate text-[12px]">{file.name}</span>
@@ -188,12 +188,12 @@ export default function FileExplorer({
 
         <div className="flex items-center gap-1">
           {file.isDirty && !isEditing && (
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" title="Unsaved changes" />
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" title="Unsaved changes" />
           )}
           <div className="hidden group-hover:flex items-center gap-0.5">
             <button
               onClick={(e) => handleStartRename(file, e)}
-              className="p-0.5 rounded text-slate-400 hover:text-white"
+              className="p-0.5 rounded text-[#8E8A9C] dark:text-slate-400 hover:text-[#7038F0] dark:hover:text-white"
               title="Rename"
             >
               <Edit2 className="w-2.5 h-2.5" />
@@ -204,7 +204,7 @@ export default function FileExplorer({
                   e.stopPropagation();
                   onDeleteFile(file.id);
                 }}
-                className="p-0.5 rounded text-slate-400 hover:text-rose-400"
+                className="p-0.5 rounded text-[#8E8A9C] dark:text-slate-400 hover:text-rose-500"
                 title="Delete"
               >
                 <Trash2 className="w-2.5 h-2.5" />
@@ -221,23 +221,23 @@ export default function FileExplorer({
       {/* ================================================================= */}
       {/* TOP CARD: FILE EXPLORER                                           */}
       {/* ================================================================= */}
-      <div className="flex-1 flex flex-col bg-[#0D0B1E] border border-[#1E1A3A] rounded-2xl overflow-hidden min-h-0">
+      <div className="flex-1 flex flex-col bg-white dark:bg-[#100D22] border border-[#E4E0EC] dark:border-white/10 rounded-2xl overflow-hidden min-h-0 shadow-xs transition-colors duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-[#1A1633]">
-          <span className="font-bold text-slate-100 text-xs tracking-wide">File Explorer</span>
-          <div className="flex items-center gap-1 text-slate-400">
+        <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-[#E4E0EC] dark:border-white/10">
+          <span className="font-bold text-[#353148] dark:text-slate-100 text-xs tracking-wide">File Explorer</span>
+          <div className="flex items-center gap-1 text-[#8E8A9C] dark:text-slate-400">
             <button
               onClick={() => {
                 setIsCreatingFile(true);
                 setNewFileName('');
               }}
-              className="p-1 rounded-lg hover:bg-[#1A1636] hover:text-white transition-colors"
+              className="p-1 rounded-lg hover:bg-[#F8F6FC] dark:hover:bg-[#1A1636] hover:text-[#7038F0] dark:hover:text-white transition-colors"
               title="New File"
             >
               <Plus className="w-3.5 h-3.5" />
             </button>
             <button
-              className="p-1 rounded-lg hover:bg-[#1A1636] hover:text-white transition-colors"
+              className="p-1 rounded-lg hover:bg-[#F8F6FC] dark:hover:bg-[#1A1636] hover:text-[#7038F0] dark:hover:text-white transition-colors"
               title="More Actions"
             >
               <MoreHorizontal className="w-3.5 h-3.5" />
@@ -248,7 +248,7 @@ export default function FileExplorer({
         {/* Tree Content */}
         <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
           {isCreatingFile && (
-            <div className="flex items-center gap-1 px-2 py-1 bg-[#161233] rounded-lg border border-[#4C3BC0] mb-1">
+            <div className="flex items-center gap-1 px-2 py-1 bg-[#F8F6FC] dark:bg-[#161233] rounded-lg border border-[#7038F0] mb-1">
               <input
                 type="text"
                 value={newFileName}
@@ -259,12 +259,12 @@ export default function FileExplorer({
                 }}
                 placeholder="newFile.js"
                 autoFocus
-                className="flex-1 bg-transparent border-none outline-none text-xs text-white placeholder-slate-500 font-mono"
+                className="flex-1 bg-transparent border-none outline-none text-xs text-[#353148] dark:text-white placeholder-slate-400 font-mono"
               />
-              <button onClick={handleConfirmCreate} className="text-emerald-400 p-0.5">
+              <button onClick={handleConfirmCreate} className="text-emerald-500 p-0.5">
                 <Check className="w-3 h-3" />
               </button>
-              <button onClick={() => setIsCreatingFile(false)} className="text-rose-400 p-0.5">
+              <button onClick={() => setIsCreatingFile(false)} className="text-rose-500 p-0.5">
                 <X className="w-3 h-3" />
               </button>
             </div>
@@ -273,14 +273,14 @@ export default function FileExplorer({
           {/* Root Project Folder */}
           <button
             onClick={() => setRootOpen(!rootOpen)}
-            className="w-full flex items-center gap-1.5 px-1.5 py-1 text-slate-200 hover:text-white font-medium text-xs"
+            className="w-full flex items-center gap-1.5 px-1.5 py-1 text-[#353148] dark:text-slate-200 hover:text-[#7038F0] dark:hover:text-white font-medium text-xs transition-colors"
           >
             {rootOpen ? (
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              <ChevronDown className="w-3.5 h-3.5 text-[#8E8A9C] dark:text-slate-400" />
             ) : (
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <ChevronRight className="w-3.5 h-3.5 text-[#8E8A9C] dark:text-slate-400" />
             )}
-            <Folder className="w-4 h-4 text-amber-400 fill-amber-400/80" />
+            <Folder className="w-4 h-4 text-amber-500 fill-amber-500/80" />
             <span className="truncate">challenge-project</span>
           </button>
 
@@ -290,14 +290,14 @@ export default function FileExplorer({
               <div>
                 <button
                   onClick={() => setSrcOpen(!srcOpen)}
-                  className="w-full flex items-center gap-1.5 pl-4 pr-2 py-1 text-slate-300 hover:text-white text-xs"
+                  className="w-full flex items-center gap-1.5 pl-4 pr-2 py-1 text-[#353148] dark:text-slate-300 hover:text-[#7038F0] dark:hover:text-white text-xs transition-colors"
                 >
                   {srcOpen ? (
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                    <ChevronDown className="w-3.5 h-3.5 text-[#8E8A9C] dark:text-slate-400" />
                   ) : (
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                    <ChevronRight className="w-3.5 h-3.5 text-[#8E8A9C] dark:text-slate-400" />
                   )}
-                  <Folder className="w-4 h-4 text-sky-400 fill-sky-400/80" />
+                  <Folder className="w-4 h-4 text-[#7038F0] dark:text-sky-400 fill-[#7038F0]/30 dark:fill-sky-400/80" />
                   <span>src</span>
                 </button>
                 {srcOpen && (
@@ -312,14 +312,14 @@ export default function FileExplorer({
                 <div>
                   <button
                     onClick={() => setTestsOpen(!testsOpen)}
-                    className="w-full flex items-center gap-1.5 pl-4 pr-2 py-1 text-slate-300 hover:text-white text-xs"
+                    className="w-full flex items-center gap-1.5 pl-4 pr-2 py-1 text-[#353148] dark:text-slate-300 hover:text-[#7038F0] dark:hover:text-white text-xs transition-colors"
                   >
                     {testsOpen ? (
-                      <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                      <ChevronDown className="w-3.5 h-3.5 text-[#8E8A9C] dark:text-slate-400" />
                     ) : (
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                      <ChevronRight className="w-3.5 h-3.5 text-[#8E8A9C] dark:text-slate-400" />
                     )}
-                    <Folder className="w-4 h-4 text-sky-400 fill-sky-400/80" />
+                    <Folder className="w-4 h-4 text-[#7038F0] dark:text-sky-400 fill-[#7038F0]/30 dark:fill-sky-400/80" />
                     <span>tests</span>
                   </button>
                   {testsOpen && (
@@ -340,42 +340,42 @@ export default function FileExplorer({
       {/* ================================================================= */}
       {/* BOTTOM CARD: CHALLENGE DETAILS                                    */}
       {/* ================================================================= */}
-      <div className="bg-[#0D0B1E] border border-[#1E1A3A] rounded-2xl p-3.5 flex flex-col justify-between flex-shrink-0">
+      <div className="bg-white dark:bg-[#100D22] border border-[#E4E0EC] dark:border-white/10 rounded-2xl p-3.5 flex flex-col justify-between flex-shrink-0 shadow-xs transition-colors duration-200">
         <div>
           {/* Card Header */}
           <div className="flex items-center gap-2 mb-2.5">
-            <div className="w-5 h-5 rounded-full bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400">
+            <div className="w-5 h-5 rounded-full bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-500">
               <Target className="w-3 h-3" />
             </div>
-            <span className="font-bold text-slate-100 text-xs">Challenge Details</span>
+            <span className="font-bold text-[#353148] dark:text-slate-100 text-xs">Challenge Details</span>
           </div>
 
           {/* Difficulty Row */}
           <div className="flex items-center justify-between mb-2.5 text-[11px]">
-            <span className="flex items-center gap-1.5 text-slate-400">
-              <Sparkles className="w-3 h-3 text-indigo-400" />
+            <span className="flex items-center gap-1.5 text-[#8E8A9C] dark:text-slate-400">
+              <Sparkles className="w-3 h-3 text-[#7038F0] dark:text-indigo-400" />
               <span>Difficulty</span>
             </span>
-            <span className="px-2.5 py-0.5 rounded-md bg-amber-950/80 text-amber-400 border border-amber-700/50 font-semibold text-[11px]">
+            <span className="px-2.5 py-0.5 rounded-md bg-amber-500/15 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700/50 font-semibold text-[11px]">
               {challenge.difficulty}
             </span>
           </div>
 
           {/* Challenge Title & Description */}
-          <h3 className="text-sm font-bold text-white mb-1.5 leading-snug">
+          <h3 className="text-sm font-bold text-[#353148] dark:text-white mb-1.5 leading-snug">
             {challenge.title}
           </h3>
-          <p className="text-[11px] text-slate-300/90 leading-relaxed mb-3">
+          <p className="text-[11px] text-[#8E8A9C] dark:text-slate-300 leading-relaxed mb-3">
             {challenge.description}
           </p>
 
           {/* Requirements Checklist */}
           <div className="mb-3">
-            <p className="text-[11px] font-bold text-slate-200 mb-1.5">Requirements:</p>
+            <p className="text-[11px] font-bold text-[#353148] dark:text-slate-200 mb-1.5">Requirements:</p>
             <div className="space-y-1">
               {challenge.instructions.map((req, idx) => (
-                <div key={idx} className="flex items-start gap-1.5 text-[11px] text-slate-300">
-                  <Check className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                <div key={idx} className="flex items-start gap-1.5 text-[11px] text-[#353148] dark:text-slate-300">
+                  <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
                   <span className="leading-tight">{req}</span>
                 </div>
               ))}
@@ -384,14 +384,14 @@ export default function FileExplorer({
 
           {/* Rewards */}
           <div className="mb-3">
-            <p className="text-[11px] font-bold text-slate-200 mb-1.5">Rewards:</p>
+            <p className="text-[11px] font-bold text-[#353148] dark:text-slate-200 mb-1.5">Rewards:</p>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 text-[11px] font-semibold text-purple-300">
-                <Star className="w-3.5 h-3.5 text-purple-400 fill-purple-400" />
+              <div className="flex items-center gap-1 text-[11px] font-semibold text-[#7038F0] dark:text-purple-300">
+                <Star className="w-3.5 h-3.5 text-[#7038F0] dark:text-purple-400 fill-[#7038F0] dark:fill-purple-400" />
                 <span>+200 XP</span>
               </div>
-              <div className="flex items-center gap-1 text-[11px] font-semibold text-sky-300">
-                <span className="w-4 h-4 rounded-full bg-sky-500/20 border border-sky-400/50 text-sky-300 flex items-center justify-center text-[9px] font-bold">
+              <div className="flex items-center gap-1 text-[11px] font-semibold text-sky-600 dark:text-sky-300">
+                <span className="w-4 h-4 rounded-full bg-sky-500/15 border border-sky-400/40 text-sky-600 dark:text-sky-300 flex items-center justify-center text-[9px] font-bold">
                   $
                 </span>
                 <span>+500 Tokens</span>
@@ -401,14 +401,14 @@ export default function FileExplorer({
         </div>
 
         {/* Bottom Progress Bar */}
-        <div className="pt-2 border-t border-[#1A1633]">
-          <div className="w-full h-1.5 bg-[#191534] rounded-full overflow-hidden mb-1.5">
+        <div className="pt-2 border-t border-[#E4E0EC] dark:border-white/10">
+          <div className="w-full h-1.5 bg-[#EDE8F5] dark:bg-[#191534] rounded-full overflow-hidden mb-1.5">
             <div
-              className="h-full bg-gradient-to-r from-[#5B48EE] to-emerald-400 transition-all duration-300"
+              className="h-full bg-gradient-to-r from-[#7038F0] to-emerald-400 transition-all duration-300"
               style={{ width: `${Math.max(progressPercent, 8)}%` }}
             />
           </div>
-          <div className="text-right text-[10px] text-slate-400 font-medium">
+          <div className="text-right text-[10px] text-[#8E8A9C] dark:text-slate-400 font-medium">
             {passedTests} / {totalTests} Tests Passed
           </div>
         </div>

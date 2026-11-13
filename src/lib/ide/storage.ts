@@ -6,7 +6,7 @@ const DEFAULT_SETTINGS: EditorSettings = {
   minimap: true,
   wordWrap: 'on',
   lineNumbers: 'on',
-  theme: 'devpractice-dark',
+  theme: 'auto',
   autoIndent: true,
   formatOnSave: true,
 };

@@ -24,7 +24,7 @@ export interface EditorSettings {
   minimap: boolean;
   wordWrap: 'on' | 'off';
   lineNumbers: 'on' | 'off';
-  theme: 'devpractice-dark' | 'vs-dark' | 'light';
+  theme: 'auto' | 'devpractice-dark' | 'devpractice-light' | 'vs-dark' | 'light';
   autoIndent: boolean;
   formatOnSave: boolean;
 }

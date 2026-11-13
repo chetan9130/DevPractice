@@ -25,7 +25,7 @@ export default function EditorTabs({
   const fileMap = new Map(files.map((f) => [f.id, f]));
 
   return (
-    <div className="flex items-center overflow-x-auto bg-[#0D0B1E] border-b border-[#1E1A3A] px-2 pt-1.5 gap-1 select-none">
+    <div className="flex items-center overflow-x-auto bg-[#F8F6FC] dark:bg-[#0B0918] border-b border-[#E4E0EC] dark:border-white/10 px-2 pt-1.5 gap-1 select-none transition-colors duration-200">
       {openFileIds.map((id) => {
         const file = fileMap.get(id);
         if (!file) return null;
@@ -36,10 +36,10 @@ export default function EditorTabs({
           <div
             key={id}
             onClick={() => onSelectTab(id)}
-            className={`group flex items-center gap-2 px-3.5 py-2 rounded-t-xl cursor-pointer text-xs font-medium transition-all ${
+            className={`group flex items-center gap-2 px-3.5 py-2 rounded-t-xl cursor-pointer text-xs transition-all ${
               isActive
-                ? 'bg-[#171332] text-white border-t border-x border-[#352B73] shadow-sm'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-[#120F26]'
+                ? 'bg-white dark:bg-[#14102A] text-[#353148] dark:text-white border-t-2 border-t-[#7038F0] border-x border-[#E4E0EC] dark:border-white/10 shadow-xs font-semibold'
+                : 'text-[#8E8A9C] dark:text-slate-400 hover:text-[#353148] dark:hover:text-slate-200 hover:bg-white/70 dark:hover:bg-white/5 font-medium'
             }`}
           >
             <div className="flex items-center justify-center flex-shrink-0">
@@ -49,7 +49,7 @@ export default function EditorTabs({
 
             {file.isDirty && (
               <span
-                className="w-1.5 h-1.5 rounded-full bg-amber-400"
+                className="w-1.5 h-1.5 rounded-full bg-amber-500"
                 title="Unsaved changes"
               />
             )}
@@ -59,7 +59,7 @@ export default function EditorTabs({
                 e.stopPropagation();
                 onCloseTab(id);
               }}
-              className="p-0.5 rounded hover:bg-[#2A225A] text-slate-400 hover:text-white transition-colors ml-1"
+              className="p-0.5 rounded hover:bg-[#7038F0]/15 dark:hover:bg-[#2A225A] text-[#8E8A9C] dark:text-slate-400 hover:text-[#7038F0] dark:hover:text-white transition-colors ml-1"
               title="Close Tab"
             >
               <X className="w-3 h-3" />
@@ -72,7 +72,7 @@ export default function EditorTabs({
       {onCreateNewTab && (
         <button
           onClick={onCreateNewTab}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#191536] transition-colors ml-1 mb-1"
+          className="p-1.5 rounded-lg text-[#8E8A9C] dark:text-slate-400 hover:text-[#353148] dark:hover:text-white hover:bg-[#EDE8F5] dark:hover:bg-[#191536] transition-colors ml-1 mb-1"
           title="New File"
         >
           <Plus className="w-3.5 h-3.5" />

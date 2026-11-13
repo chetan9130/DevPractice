@@ -184,10 +184,10 @@ export default function AIAssistantPanel({
 
   if (isMinimized) {
     return (
-      <div className="w-12 bg-[#0D0B1E] border border-[#1E1A3A] rounded-2xl flex flex-col items-center py-4 select-none">
+      <div className="w-12 bg-white dark:bg-[#100D22] border border-[#E4E0EC] dark:border-white/10 rounded-2xl flex flex-col items-center py-4 select-none shadow-xs transition-colors duration-200">
         <button
           onClick={() => setIsMinimized(false)}
-          className="p-2 rounded-xl bg-[#5B48EE]/20 text-[#A69BFF] hover:text-white"
+          className="p-2 rounded-xl bg-[#7038F0]/15 text-[#7038F0] dark:text-[#A78BFA] hover:text-[#5820D0] dark:hover:text-white"
           title="Expand AI Assistant"
         >
           <Sparkles className="w-5 h-5" />
@@ -197,30 +197,30 @@ export default function AIAssistantPanel({
   }
 
   return (
-    <div className="w-80 xl:w-[340px] bg-[#0D0B1E] border border-[#1E1A3A] rounded-2xl flex flex-col h-full select-none text-xs overflow-hidden flex-shrink-0">
+    <div className="w-80 xl:w-[340px] bg-white dark:bg-[#100D22] border border-[#E4E0EC] dark:border-white/10 rounded-2xl flex flex-col h-full select-none text-xs overflow-hidden flex-shrink-0 shadow-xs transition-colors duration-200">
       {/* ================================================================= */}
       {/* HEADER: AI Assistant Beta                                         */}
       {/* ================================================================= */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#1A1633]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#E4E0EC] dark:border-white/10">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-[#A69BFF]" />
-          <span className="font-bold text-white text-sm">AI Assistant</span>
-          <span className="px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-400 border border-sky-500/30 font-bold text-[10px]">
+          <Sparkles className="w-4 h-4 text-[#7038F0] dark:text-[#A78BFA]" />
+          <span className="font-bold text-[#353148] dark:text-white text-sm">AI Assistant</span>
+          <span className="px-1.5 py-0.5 rounded bg-[#7038F0]/15 text-[#7038F0] dark:text-[#A78BFA] border border-[#7038F0]/30 font-bold text-[10px]">
             Beta
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 text-slate-400">
+        <div className="flex items-center gap-1.5 text-[#8E8A9C] dark:text-slate-400">
           <button
             onClick={() => setIsMinimized(true)}
-            className="p-1 rounded hover:bg-[#191536] hover:text-white transition-colors"
+            className="p-1 rounded hover:bg-[#F8F6FC] dark:hover:bg-[#191536] hover:text-[#353148] dark:hover:text-white transition-colors"
             title="Minimize"
           >
             <Minus className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => setIsMinimized(true)}
-            className="p-1 rounded hover:bg-[#191536] hover:text-white transition-colors"
+            className="p-1 rounded hover:bg-[#F8F6FC] dark:hover:bg-[#191536] hover:text-[#353148] dark:hover:text-white transition-colors"
             title="Close"
           >
             <X className="w-3.5 h-3.5" />
@@ -231,13 +231,13 @@ export default function AIAssistantPanel({
       {/* ================================================================= */}
       {/* POLICY MODE PILLS: Learning | Guided | Strict                     */}
       {/* ================================================================= */}
-      <div className="grid grid-cols-3 gap-1.5 px-3.5 py-2.5 border-b border-[#1A1633]">
+      <div className="grid grid-cols-3 gap-1.5 px-3.5 py-2.5 border-b border-[#E4E0EC] dark:border-white/10 bg-[#F8F6FC]/60 dark:bg-black/10">
         <button
           onClick={() => setPolicyMode('learning')}
           className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl font-semibold text-xs transition-all ${
             policyMode === 'learning'
-              ? 'bg-gradient-to-r from-[#5B48EE] to-[#7C5CFA] text-white shadow-md shadow-indigo-500/25'
-              : 'bg-[#15122E] text-slate-300 hover:text-white border border-[#25204B]'
+              ? 'bg-gradient-to-r from-[#7038F0] to-[#8C60F3] text-white shadow-md shadow-[#7038F0]/25'
+              : 'bg-white dark:bg-[#15122E] text-[#8E8A9C] dark:text-slate-300 hover:text-[#353148] dark:hover:text-white border border-[#E4E0EC] dark:border-[#25204B]'
           }`}
         >
           <GraduationCap className="w-3.5 h-3.5" />
@@ -248,8 +248,8 @@ export default function AIAssistantPanel({
           onClick={() => setPolicyMode('guided')}
           className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl font-semibold text-xs transition-all ${
             policyMode === 'guided'
-              ? 'bg-gradient-to-r from-[#5B48EE] to-[#7C5CFA] text-white shadow-md shadow-indigo-500/25'
-              : 'bg-[#15122E] text-slate-300 hover:text-white border border-[#25204B]'
+              ? 'bg-gradient-to-r from-[#7038F0] to-[#8C60F3] text-white shadow-md shadow-[#7038F0]/25'
+              : 'bg-white dark:bg-[#15122E] text-[#8E8A9C] dark:text-slate-300 hover:text-[#353148] dark:hover:text-white border border-[#E4E0EC] dark:border-[#25204B]'
           }`}
         >
           <Compass className="w-3.5 h-3.5" />
@@ -261,7 +261,7 @@ export default function AIAssistantPanel({
           className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl font-semibold text-xs transition-all ${
             policyMode === 'strict'
               ? 'bg-gradient-to-r from-rose-600 to-rose-500 text-white shadow-md shadow-rose-500/25'
-              : 'bg-[#15122E] text-slate-300 hover:text-white border border-[#25204B]'
+              : 'bg-white dark:bg-[#15122E] text-[#8E8A9C] dark:text-slate-300 hover:text-[#353148] dark:hover:text-white border border-[#E4E0EC] dark:border-[#25204B]'
           }`}
         >
           <Lock className="w-3.5 h-3.5" />
@@ -277,19 +277,19 @@ export default function AIAssistantPanel({
           <div key={msg.id}>
             {msg.sender === 'user' ? (
               <div className="flex justify-end">
-                <div className="flex items-center gap-2 bg-[#231B4F] border border-[#3B2E7E] text-slate-100 px-3.5 py-2 rounded-2xl rounded-tr-xs max-w-[90%] shadow-sm">
-                  <User className="w-3.5 h-3.5 text-[#A69BFF] flex-shrink-0" />
+                <div className="flex items-center gap-2 bg-gradient-to-r from-[#7038F0] to-[#8C60F3] text-white px-3.5 py-2 rounded-2xl rounded-tr-xs max-w-[90%] shadow-xs">
+                  <User className="w-3.5 h-3.5 text-white/90 flex-shrink-0" />
                   <span className="text-xs">{msg.content}</span>
                 </div>
               </div>
             ) : (
               <div className="flex items-start gap-2.5">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sky-400 to-[#5B48EE] p-0.5 flex-shrink-0 mt-0.5 shadow-md shadow-indigo-500/20">
-                  <div className="w-full h-full rounded-full bg-[#0D0B1E] flex items-center justify-center">
-                    <RefreshCw className="w-3.5 h-3.5 text-sky-400" />
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#7038F0] to-sky-400 p-0.5 flex-shrink-0 mt-0.5 shadow-md shadow-[#7038F0]/20">
+                  <div className="w-full h-full rounded-full bg-white dark:bg-[#0D0B1E] flex items-center justify-center">
+                    <RefreshCw className="w-3.5 h-3.5 text-[#7038F0] dark:text-sky-400" />
                   </div>
                 </div>
-                <div className="bg-[#15122E] border border-[#25204B] text-slate-200 p-3 rounded-2xl rounded-tl-xs text-xs leading-relaxed flex-1">
+                <div className="bg-[#F8F6FC] dark:bg-[#15122E] border border-[#E4E0EC] dark:border-[#25204B] text-[#353148] dark:text-slate-200 p-3 rounded-2xl rounded-tl-xs text-xs leading-relaxed flex-1">
                   {msg.content}
                 </div>
               </div>
@@ -298,8 +298,8 @@ export default function AIAssistantPanel({
         ))}
 
         {isGenerating && (
-          <div className="flex items-center gap-2 text-slate-400 text-xs pl-2">
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#A69BFF]" />
+          <div className="flex items-center gap-2 text-[#8E8A9C] dark:text-slate-400 text-xs pl-2">
+            <Loader2 className="w-3.5 h-3.5 animate-spin text-[#7038F0] dark:text-[#A69BFF]" />
             <span>Analyzing AST & execution context...</span>
           </div>
         )}
@@ -308,29 +308,30 @@ export default function AIAssistantPanel({
         {policyMode !== 'strict' && (
           <div className="pt-1">
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
-                <CheckSquare className="w-4 h-4 text-emerald-400" />
+              <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+                <CheckSquare className="w-4 h-4 text-emerald-500" />
                 <span>Suggested Fix:</span>
               </div>
               <button
                 onClick={handleOpenDiffPreview}
-                className="text-[10px] text-[#A69BFF] hover:text-white flex items-center gap-1 underline"
+                className="text-[10px] text-[#7038F0] dark:text-[#A69BFF] hover:underline flex items-center gap-1 font-semibold"
               >
                 <SplitSquareVertical className="w-3 h-3" />
                 <span>View Diff</span>
               </button>
             </div>
 
-            <div className="bg-[#080614] border border-[#221C44] rounded-xl overflow-hidden mb-2.5">
-              <div className="flex items-center justify-end px-2.5 py-1 bg-[#100D24] border-b border-[#1D183B]">
+            <div className="bg-[#F5F2FA] dark:bg-[#0B0918] border border-[#E4E0EC] dark:border-[#2B2352] rounded-xl overflow-hidden mb-2.5 shadow-xs">
+              <div className="flex items-center justify-between px-2.5 py-1.5 bg-[#EDE7F6] dark:bg-[#120F26] border-b border-[#E4E0EC] dark:border-[#221C42]">
+                <span className="text-[10px] font-mono font-semibold text-[#7038F0] dark:text-[#A69BFF]">fix.js</span>
                 <button
                   onClick={handleCopySnippet}
-                  className="flex items-center gap-1 text-[10px] text-slate-300 hover:text-white bg-[#1B1638] px-2 py-0.5 rounded border border-[#2D255A] transition-colors"
+                  className="flex items-center gap-1 text-[10px] text-[#555068] dark:text-slate-300 hover:text-[#25213B] dark:hover:text-white bg-white dark:bg-[#201A42] px-2 py-0.5 rounded border border-[#DDD8E8] dark:border-[#382F6A] shadow-2xs transition-colors"
                 >
                   {copied ? (
                     <>
-                      <Check className="w-2.5 h-2.5 text-emerald-400" />
-                      <span className="text-emerald-300">Copied</span>
+                      <Check className="w-2.5 h-2.5 text-emerald-500 dark:text-emerald-400" />
+                      <span className="text-emerald-600 dark:text-emerald-300 font-medium">Copied</span>
                     </>
                   ) : (
                     <>
@@ -341,17 +342,17 @@ export default function AIAssistantPanel({
                 </button>
               </div>
 
-              <pre className="p-3 font-mono text-[11px] leading-relaxed overflow-x-auto text-slate-200">
+              <pre className="p-3 font-mono text-[11px] leading-relaxed overflow-x-auto text-[#28243D] dark:text-slate-200">
                 <code>
-                  <span className="text-sky-400">const</span> user ={' '}
-                  <span className="text-amber-300">validateUser</span>(email, password);{'\n'}
-                  <span className="text-purple-400">if</span> (!user) &#123;{'\n'}
+                  <span className="text-blue-600 dark:text-sky-400">const</span> user ={' '}
+                  <span className="text-amber-700 dark:text-amber-300">validateUser</span>(email, password);{'\n'}
+                  <span className="text-purple-600 dark:text-purple-400">if</span> (!user) &#123;{'\n'}
                   {'  '}
-                  <span className="text-purple-400">return</span> res.
-                  <span className="text-amber-300">status</span>(
-                  <span className="text-emerald-300">401</span>).
-                  <span className="text-amber-300">json</span>(&#123;{'\n'}
-                  {'    '}error: <span className="text-rose-300">&apos;Invalid credentials&apos;</span>
+                  <span className="text-purple-600 dark:text-purple-400">return</span> res.
+                  <span className="text-amber-700 dark:text-amber-300">status</span>(
+                  <span className="text-emerald-700 dark:text-emerald-300">401</span>).
+                  <span className="text-amber-700 dark:text-amber-300">json</span>(&#123;{'\n'}
+                  {'    '}error: <span className="text-rose-600 dark:text-rose-300">&apos;Invalid credentials&apos;</span>
                   {'\n'}
                   {'  '}&#125;);{'\n'}
                   &#125;
@@ -362,7 +363,7 @@ export default function AIAssistantPanel({
             {/* Apply Suggestion Button */}
             <button
               onClick={handleApplySuggestion}
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#5B48EE] via-[#6C5CE7] to-[#8E7CFF] hover:brightness-110 text-white font-bold text-xs shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 transition-all active:scale-98"
+              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#7038F0] to-[#8C60F3] hover:brightness-110 text-white font-bold text-xs shadow-md shadow-[#7038F0]/30 flex items-center justify-center gap-2 transition-all active:scale-98"
             >
               {appliedSuccess ? (
                 <>
@@ -385,8 +386,8 @@ export default function AIAssistantPanel({
       {/* ================================================================= */}
       {/* BOTTOM INPUT & QUICK ACTION PILLS                                 */}
       {/* ================================================================= */}
-      <div className="p-3 bg-[#0A0818] border-t border-[#1A1633] space-y-2.5">
-        <div className="flex items-center gap-2 bg-[#14102E] border border-[#292254] rounded-xl pl-3 pr-1.5 py-1.5">
+      <div className="p-3 bg-[#F8F6FC] dark:bg-[#0A0818] border-t border-[#E4E0EC] dark:border-white/10 space-y-2.5">
+        <div className="flex items-center gap-2 bg-white dark:bg-[#14102E] border border-[#E4E0EC] dark:border-[#292254] rounded-xl pl-3 pr-1.5 py-1.5 shadow-2xs">
           <input
             type="text"
             value={inputQuery}
@@ -397,41 +398,41 @@ export default function AIAssistantPanel({
               }
             }}
             placeholder="Ask anything about your code..."
-            className="flex-1 bg-transparent border-none outline-none text-xs text-white placeholder-slate-500"
+            className="flex-1 bg-transparent border-none outline-none text-xs text-[#353148] dark:text-white placeholder-[#8E8A9C]"
           />
           <button
             onClick={() => {
               if (inputQuery.trim()) handleActionPrompt('custom', inputQuery.trim());
             }}
-            className="w-7 h-7 rounded-lg bg-gradient-to-r from-[#5B48EE] to-[#7C5CFA] hover:brightness-110 text-white flex items-center justify-center shadow-sm transition-all"
+            className="w-7 h-7 rounded-lg bg-gradient-to-r from-[#7038F0] to-[#8C60F3] hover:brightness-110 text-white flex items-center justify-center shadow-xs transition-all"
           >
             <Send className="w-3.5 h-3.5" />
           </button>
         </div>
 
         {/* Bottom 3 Action Links */}
-        <div className="flex items-center justify-between px-1 text-[11px] text-slate-400">
+        <div className="flex items-center justify-between px-1 text-[11px] text-[#8E8A9C] dark:text-slate-400">
           <button
             onClick={() => handleActionPrompt('explain')}
-            className="flex items-center gap-1 hover:text-white transition-colors"
+            className="flex items-center gap-1 hover:text-[#7038F0] dark:hover:text-white transition-colors"
           >
-            <HelpCircle className="w-3 h-3 text-[#A69BFF]" />
+            <HelpCircle className="w-3 h-3 text-[#7038F0] dark:text-[#A69BFF]" />
             <span>Explain Code</span>
           </button>
 
           <button
             onClick={() => handleActionPrompt('find_bugs')}
-            className="flex items-center gap-1 hover:text-white transition-colors"
+            className="flex items-center gap-1 hover:text-[#7038F0] dark:hover:text-white transition-colors"
           >
-            <Target className="w-3 h-3 text-[#A69BFF]" />
+            <Target className="w-3 h-3 text-[#7038F0] dark:text-[#A69BFF]" />
             <span>Find Bugs</span>
           </button>
 
           <button
             onClick={() => handleActionPrompt('improve')}
-            className="flex items-center gap-1 hover:text-white transition-colors"
+            className="flex items-center gap-1 hover:text-[#7038F0] dark:hover:text-white transition-colors"
           >
-            <Sparkles className="w-3 h-3 text-[#A69BFF]" />
+            <Sparkles className="w-3 h-3 text-[#7038F0] dark:text-[#A69BFF]" />
             <span>Improve Code</span>
           </button>
         </div>

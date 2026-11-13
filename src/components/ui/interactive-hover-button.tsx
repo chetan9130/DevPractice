@@ -15,13 +15,13 @@ export function InteractiveHoverButton({
   children,
   icon,
   className,
-  glowColor = "#5B48EE",
+  glowColor = "#8C60F3",
   ...props
 }: InteractiveHoverButtonProps) {
   return (
     <button
       className={cn(
-        "group relative inline-flex items-center justify-center overflow-hidden rounded-xl bg-[#5B48EE] px-6 py-3 text-xs sm:text-sm font-bold text-white transition-all duration-300 active:scale-95 shadow-lg shadow-indigo-600/25",
+        "group relative inline-flex items-center justify-center overflow-hidden rounded-xl bg-[#7038F0] hover:bg-[#5E26E5] dark:bg-[#8C60F3] dark:hover:bg-[#7A4AEB] px-6 py-3 text-xs sm:text-sm font-bold text-white transition-all duration-300 active:scale-95 shadow-md shadow-[#7038F0]/25 dark:shadow-lg dark:shadow-[#8C60F3]/30",
         className
       )}
       {...props}

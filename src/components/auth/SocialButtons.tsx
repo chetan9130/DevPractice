@@ -66,11 +66,11 @@ export default function SocialButtons() {
             type="button"
             disabled={!!loadingProvider}
             onClick={() => handleOAuthClick('google')}
-            className="flex flex-col sm:flex-row items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-dev-surface/90 hover:bg-dev-cardHover border border-dev-border hover:border-dev-purple/40 text-xs font-semibold text-dev-text transition-all duration-200 hover:shadow-glow-card active:scale-[0.98] disabled:opacity-50"
+            className="flex flex-col sm:flex-row items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-white dark:bg-[#1B1939] hover:bg-[#F8F6FC] dark:hover:bg-white/10 border border-[#E4E0EC] dark:border-white/10 hover:border-[#7038F0]/40 dark:hover:border-[#8C60F3]/40 text-xs font-semibold text-[#353148] dark:text-slate-200 transition-all duration-200 shadow-xs active:scale-[0.98] disabled:opacity-50"
             title="Sign in with Google"
           >
             {loadingProvider === 'google' ? (
-              <Loader2 className="w-4 h-4 animate-spin text-dev-purple" />
+              <Loader2 className="w-4 h-4 animate-spin text-[#7038F0] dark:text-[#8C60F3]" />
             ) : (
               <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                 <path
@@ -99,13 +99,13 @@ export default function SocialButtons() {
             type="button"
             disabled={!!loadingProvider}
             onClick={() => handleOAuthClick('github')}
-            className="flex flex-col sm:flex-row items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-dev-surface/90 hover:bg-dev-cardHover border border-dev-border hover:border-dev-purple/40 text-xs font-semibold text-dev-text transition-all duration-200 hover:shadow-glow-card active:scale-[0.98] disabled:opacity-50"
+            className="flex flex-col sm:flex-row items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-white dark:bg-[#1B1939] hover:bg-[#F8F6FC] dark:hover:bg-white/10 border border-[#E4E0EC] dark:border-white/10 hover:border-[#7038F0]/40 dark:hover:border-[#8C60F3]/40 text-xs font-semibold text-[#353148] dark:text-slate-200 transition-all duration-200 shadow-xs active:scale-[0.98] disabled:opacity-50"
             title="Sign in with GitHub"
           >
             {loadingProvider === 'github' ? (
-              <Loader2 className="w-4 h-4 animate-spin text-dev-purple" />
+              <Loader2 className="w-4 h-4 animate-spin text-[#7038F0] dark:text-[#8C60F3]" />
             ) : (
-              <svg className="w-4 h-4 shrink-0 fill-current text-white" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 shrink-0 fill-current text-[#353148] dark:text-white" viewBox="0 0 24 24">
                 <path
                   fillRule="evenodd"
                   clipRule="evenodd"
@@ -121,11 +121,11 @@ export default function SocialButtons() {
             type="button"
             disabled={!!loadingProvider}
             onClick={() => handleOAuthClick('microsoft')}
-            className="flex flex-col sm:flex-row items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-dev-surface/90 hover:bg-dev-cardHover border border-dev-border hover:border-dev-purple/40 text-xs font-semibold text-dev-text transition-all duration-200 hover:shadow-glow-card active:scale-[0.98] disabled:opacity-50"
+            className="flex flex-col sm:flex-row items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-white dark:bg-[#1B1939] hover:bg-[#F8F6FC] dark:hover:bg-white/10 border border-[#E4E0EC] dark:border-white/10 hover:border-[#7038F0]/40 dark:hover:border-[#8C60F3]/40 text-xs font-semibold text-[#353148] dark:text-slate-200 transition-all duration-200 shadow-xs active:scale-[0.98] disabled:opacity-50"
             title="Sign in with Microsoft"
           >
             {loadingProvider === 'microsoft' ? (
-              <Loader2 className="w-4 h-4 animate-spin text-dev-purple" />
+              <Loader2 className="w-4 h-4 animate-spin text-[#7038F0] dark:text-[#8C60F3]" />
             ) : (
               <svg className="w-4 h-4 shrink-0" viewBox="0 0 21 21">
                 <rect x="1" y="1" width="9" height="9" fill="#f25022" />
