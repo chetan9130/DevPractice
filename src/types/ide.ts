@@ -88,5 +88,13 @@ export interface Challenge {
   initialFiles: IDEFile[];
   testCases: TestCase[];
   solutionHints: string[];
+  hints?: string[];
+  tags?: string[];
+  scenarioContext?: string;
+  inputFormat?: string;
+  outputFormat?: string;
+  constraints?: string[];
+  sampleScenarios?: Array<{ title: string; input: string; output: string; explanation: string }>;
+  architectureNotes?: string;
 }
 

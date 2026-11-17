@@ -197,7 +197,7 @@ export default function AIAssistantPanel({
   }
 
   return (
-    <div className="w-80 xl:w-[340px] bg-white dark:bg-[#100D22] border border-[#E4E0EC] dark:border-white/10 rounded-2xl flex flex-col h-full select-none text-xs overflow-hidden flex-shrink-0 shadow-xs transition-colors duration-200">
+    <div className="w-full bg-white dark:bg-[#100D22] border border-[#E4E0EC] dark:border-white/10 rounded-2xl flex flex-col h-full select-none text-xs overflow-hidden flex-shrink-0 shadow-xs transition-colors duration-200">
       {/* ================================================================= */}
       {/* HEADER: AI Assistant Beta                                         */}
       {/* ================================================================= */}

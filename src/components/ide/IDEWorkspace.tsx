@@ -18,6 +18,7 @@ import FileExplorer from './FileExplorer';
 import EditorTabs from './EditorTabs';
 import BottomPanel from './BottomPanel';
 import AIAssistantPanel from './AIAssistantPanel';
+import { ChallengeDetailsPanel } from './ChallengeDetailsPanel';
 import {
   Loader2,
   Trophy,
@@ -44,6 +45,9 @@ import {
   Star,
   Zap,
   Award,
+  ArrowLeft,
+  BookOpen,
+  Terminal as TerminalIcon,
 } from 'lucide-react';
 
 // Dynamically import Monaco components to prevent SSR hydration issues in Next.js App Router
@@ -155,12 +159,24 @@ interface IDEWorkspaceProps {
   initialChallengeId?: string;
   onExitWorkspace?: () => void;
   onNavigateTab?: (tabName: string) => void;
+  assessmentMode?: {
+    id?: string;
+    company: string;
+    duration: string;
+    durationMinutes?: number;
+    passingScore: string;
+    badge: string;
+    startedAt?: number;
+  } | null;
+  onExitAssessment?: () => void;
 }
 
 export default function IDEWorkspace({
   initialChallengeId,
   onExitWorkspace,
   onNavigateTab,
+  assessmentMode,
+  onExitAssessment,
 }: IDEWorkspaceProps) {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -171,12 +187,186 @@ export default function IDEWorkspace({
     initialChallengeId || DEFAULT_CHALLENGES[0].id
   );
 
+  // Proctored Assessment State
+  const [activeAssessment, setActiveAssessment] = useState(() => {
+    if (assessmentMode) return assessmentMode;
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('devpractice_active_assessment');
+      if (saved) {
+        try { return JSON.parse(saved); } catch { return null; }
+      }
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (assessmentMode) {
+      setActiveAssessment(assessmentMode);
+    }
+  }, [assessmentMode]);
+
+  // Timed Assessment Countdown
+  const [assessmentSecondsLeft, setAssessmentSecondsLeft] = useState<number>(() => {
+    const totalMinutes = activeAssessment?.durationMinutes || (activeAssessment?.duration ? parseInt(activeAssessment.duration, 10) : 90) || 90;
+    if (activeAssessment?.startedAt) {
+      const elapsed = Math.floor((Date.now() - activeAssessment.startedAt) / 1000);
+      return Math.max(0, totalMinutes * 60 - elapsed);
+    }
+    return totalMinutes * 60;
+  });
+
+  useEffect(() => {
+    if (!activeAssessment) return;
+    const interval = setInterval(() => {
+      setAssessmentSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [activeAssessment]);
+
+  const formatTimer = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    if (hrs > 0) {
+      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleFinishAssessment = () => {
+    if (onExitAssessment) onExitAssessment();
+    setActiveAssessment(null);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('devpractice_active_assessment');
+    }
+    if (onExitWorkspace) onExitWorkspace();
+  };
+
   const currentChallenge: Challenge =
     DEFAULT_CHALLENGES.find((c) => c.id === activeChallengeId) || DEFAULT_CHALLENGES[0];
 
   // Activity bar state
-  const [activeActivity, setActiveActivity] = useState<'explorer' | 'run' | 'git' | 'settings'>('explorer');
+  const [activeActivity, setActiveActivity] = useState<'explorer' | 'details' | 'run' | 'git' | 'settings'>('explorer');
   const [showExplorer, setShowExplorer] = useState(true);
+  const [leftSidebarTab, setLeftSidebarTab] = useState<'files' | 'details'>('files');
+  const [mobileTab, setMobileTab] = useState<'editor' | 'files' | 'details' | 'terminal' | 'ai'>('editor');
+
+  // Adjustable section dimensions (persisted to localStorage)
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('ide_sidebar_width');
+      if (saved && !isNaN(Number(saved))) return Number(saved);
+    }
+    return 300;
+  });
+
+  const [bottomPanelHeight, setBottomPanelHeight] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('ide_bottom_height');
+      if (saved && !isNaN(Number(saved))) return Number(saved);
+    }
+    return 220;
+  });
+
+  const [aiPanelWidth, setAiPanelWidth] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('ide_ai_width');
+      if (saved && !isNaN(Number(saved))) return Number(saved);
+    }
+    return 340;
+  });
+
+  const [resizingSection, setResizingSection] = useState<'sidebar' | 'bottom' | 'ai' | null>(null);
+
+  const handleStartSidebarResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setResizingSection('sidebar');
+    const startX = e.clientX;
+    const startWidth = sidebarWidth;
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const delta = moveEvent.clientX - startX;
+      const newWidth = Math.min(Math.max(startWidth + delta, 220), 550);
+      setSidebarWidth(newWidth);
+    };
+
+    const onMouseUp = () => {
+      setResizingSection(null);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      if (typeof window !== 'undefined') {
+        setSidebarWidth((latest) => {
+          localStorage.setItem('ide_sidebar_width', String(latest));
+          return latest;
+        });
+      }
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
+  const handleStartBottomResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setResizingSection('bottom');
+    const startY = e.clientY;
+    const startHeight = bottomPanelHeight;
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const delta = startY - moveEvent.clientY;
+      const newHeight = Math.min(Math.max(startHeight + delta, 120), 550);
+      setBottomPanelHeight(newHeight);
+    };
+
+    const onMouseUp = () => {
+      setResizingSection(null);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      if (typeof window !== 'undefined') {
+        setBottomPanelHeight((latest) => {
+          localStorage.setItem('ide_bottom_height', String(latest));
+          return latest;
+        });
+      }
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
+
+  const handleStartAiResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setResizingSection('ai');
+    const startX = e.clientX;
+    const startWidth = aiPanelWidth;
+
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const delta = startX - moveEvent.clientX;
+      const newWidth = Math.min(Math.max(startWidth + delta, 240), 550);
+      setAiPanelWidth(newWidth);
+    };
+
+    const onMouseUp = () => {
+      setResizingSection(null);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      if (typeof window !== 'undefined') {
+        setAiPanelWidth((latest) => {
+          localStorage.setItem('ide_ai_width', String(latest));
+          return latest;
+        });
+      }
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+  };
 
   // Files & Tabs State
   const [files, setFiles] = useState<IDEFile[]>([]);
@@ -483,20 +673,31 @@ export default function IDEWorkspace({
       {/* 1. TOP GLOBAL NAVIGATION BAR                                          */}
       {/* ===================================================================== */}
       <header className="h-14 px-4 bg-white/90 dark:bg-[#0B091B]/90 backdrop-blur-md border-b border-[#E4E0EC] dark:border-white/10 flex items-center justify-between flex-shrink-0 transition-colors duration-200">
-        {/* Brand Logo */}
-        <div
-          onClick={onExitWorkspace}
-          className="flex items-center gap-2.5 cursor-pointer group"
-        >
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7038F0] to-[#8C60F3] flex items-center justify-center shadow-md shadow-[#7038F0]/30">
-            <Code2 className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <div className="font-extrabold text-base tracking-tight text-[#353148] dark:text-white leading-none">
-              DevPractice
+        {/* Brand Logo & Prominent Dashboard Back Button */}
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={onExitWorkspace}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F0EDF8] hover:bg-[#E4DEFC] dark:bg-[#1C173E] dark:hover:bg-[#2A235D] border border-[#D5CCF3] dark:border-[#3D337A] text-[#7038F0] dark:text-[#C4B5FD] font-semibold text-xs transition-all shadow-2xs hover:scale-[1.02] active:scale-95 cursor-pointer shrink-0"
+            title="Return to Dashboard"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span className="font-semibold">Dashboard</span>
+          </button>
+
+          <div
+            onClick={onExitWorkspace}
+            className="hidden sm:flex items-center gap-2.5 cursor-pointer group"
+          >
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#7038F0] to-[#8C60F3] flex items-center justify-center shadow-md shadow-[#7038F0]/30">
+              <Code2 className="w-5 h-5 text-white" />
             </div>
-            <div className="text-[10px] text-[#8E8A9C] dark:text-slate-400 tracking-wide mt-0.5">
-              Learn • Practice • Master
+            <div>
+              <div className="font-extrabold text-base tracking-tight text-[#353148] dark:text-white leading-none">
+                DevPractice
+              </div>
+              <div className="text-[10px] text-[#8E8A9C] dark:text-slate-400 tracking-wide mt-0.5">
+                Learn • Practice • Master
+              </div>
             </div>
           </div>
         </div>
@@ -606,6 +807,37 @@ export default function IDEWorkspace({
         </div>
       </header>
 
+      {/* Proctored Assessment Bar */}
+      {activeAssessment && (
+        <div className="bg-gradient-to-r from-[#22183D] via-[#1B1435] to-[#120F26] border-b border-[#8C60F3]/30 px-4 py-2 flex items-center justify-between text-white shrink-0 z-20 shadow-md">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-bold uppercase tracking-wider shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" />
+              Proctored Mock Test
+            </span>
+            <span className="text-xs sm:text-sm font-bold text-white truncate">
+              {activeAssessment.company}
+            </span>
+            <span className="hidden md:inline text-xs text-purple-200 shrink-0">
+              • Cutoff Target: <strong className="text-white">{activeAssessment.passingScore}</strong>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-amber-300 bg-black/40 px-3 py-1 rounded-xl border border-white/10 shadow-inner">
+              <Clock className="w-3.5 h-3.5 text-amber-400" />
+              <span>{formatTimer(assessmentSecondsLeft)}</span>
+            </div>
+            <button
+              onClick={handleFinishAssessment}
+              className="px-3 py-1 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl border border-white/10 transition-colors cursor-pointer"
+            >
+              Finish Assessment
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ===================================================================== */}
       {/* 2. MAIN WORKSPACE CONTAINER                                           */}
       {/* ===================================================================== */}
@@ -613,22 +845,42 @@ export default function IDEWorkspace({
         {/* ----------------------------------------------------------------- */}
         {/* FAR-LEFT VERTICAL ACTIVITY DOCK                                   */}
         {/* ----------------------------------------------------------------- */}
-        <aside className="w-14 bg-white dark:bg-[#100D22] border border-[#E4E0EC] dark:border-white/10 rounded-2xl flex flex-col items-center justify-between py-3 flex-shrink-0 shadow-xs transition-colors duration-200">
+        <aside className="hidden md:flex w-14 bg-white dark:bg-[#100D22] border border-[#E4E0EC] dark:border-white/10 rounded-2xl flex-col items-center justify-between py-3 flex-shrink-0 shadow-xs transition-colors duration-200">
           <div className="flex flex-col items-center gap-3 w-full px-1.5">
             {/* Explorer */}
             <button
               onClick={() => {
                 setActiveActivity('explorer');
-                setShowExplorer(!showExplorer);
+                setLeftSidebarTab('files');
+                setShowExplorer(true);
               }}
               className={`w-full py-2 rounded-xl flex flex-col items-center gap-1 transition-all ${
-                activeActivity === 'explorer'
+                showExplorer && leftSidebarTab === 'files'
                   ? 'bg-[#7038F0]/10 dark:bg-[#7038F0]/25 text-[#7038F0] dark:text-[#A78BFA] border border-[#7038F0]/30 dark:border-[#7038F0]/50 shadow-xs'
                   : 'text-[#8E8A9C] dark:text-slate-400 hover:text-[#353148] dark:hover:text-white hover:bg-[#F8F6FC] dark:hover:bg-[#161230]'
               }`}
+              title="File Explorer"
             >
               <Files className="w-4 h-4" />
-              <span className="text-[9px] font-semibold">Explorer</span>
+              <span className="text-[9px] font-semibold">Files</span>
+            </button>
+
+            {/* Problem Details */}
+            <button
+              onClick={() => {
+                setActiveActivity('details');
+                setLeftSidebarTab('details');
+                setShowExplorer(true);
+              }}
+              className={`w-full py-2 rounded-xl flex flex-col items-center gap-1 transition-all ${
+                showExplorer && leftSidebarTab === 'details'
+                  ? 'bg-[#7038F0]/10 dark:bg-[#7038F0]/25 text-[#7038F0] dark:text-[#A78BFA] border border-[#7038F0]/30 dark:border-[#7038F0]/50 shadow-xs'
+                  : 'text-[#8E8A9C] dark:text-slate-400 hover:text-[#353148] dark:hover:text-white hover:bg-[#F8F6FC] dark:hover:bg-[#161230]'
+              }`}
+              title="Problem Specification & Details"
+            >
+              <BookOpen className="w-4 h-4" />
+              <span className="text-[9px] font-semibold">Details</span>
             </button>
 
             {/* Run */}
@@ -642,6 +894,7 @@ export default function IDEWorkspace({
                   ? 'bg-[#7038F0]/10 dark:bg-[#211A4C] text-[#7038F0] dark:text-[#A69BFF] border border-[#7038F0]/30 dark:border-[#4D3BB3]'
                   : 'text-[#8E8A9C] dark:text-slate-400 hover:text-[#353148] dark:hover:text-white hover:bg-[#F8F6FC] dark:hover:bg-[#161230]'
               }`}
+              title="Run Code"
             >
               <Play className="w-4 h-4" />
               <span className="text-[9px] font-medium">Run</span>
@@ -655,6 +908,7 @@ export default function IDEWorkspace({
                   ? 'bg-[#7038F0]/10 dark:bg-[#211A4C] text-[#7038F0] dark:text-[#A69BFF] border border-[#7038F0]/30 dark:border-[#4D3BB3]'
                   : 'text-[#8E8A9C] dark:text-slate-400 hover:text-[#353148] dark:hover:text-white hover:bg-[#F8F6FC] dark:hover:bg-[#161230]'
               }`}
+              title="Source Control"
             >
               <GitBranch className="w-4 h-4" />
               <span className="text-[9px] font-medium">Git</span>
@@ -668,6 +922,7 @@ export default function IDEWorkspace({
                   ? 'bg-[#7038F0]/10 dark:bg-[#211A4C] text-[#7038F0] dark:text-[#A69BFF] border border-[#7038F0]/30 dark:border-[#4D3BB3]'
                   : 'text-[#8E8A9C] dark:text-slate-400 hover:text-[#353148] dark:hover:text-white hover:bg-[#F8F6FC] dark:hover:bg-[#161230]'
               }`}
+              title="Editor Settings"
             >
               <Settings className="w-4 h-4" />
               <span className="text-[9px] font-medium">Settings</span>
@@ -676,7 +931,15 @@ export default function IDEWorkspace({
 
           {/* Bottom Help Button */}
           <div className="w-full px-1.5">
-            <button className="w-full py-2 rounded-xl flex flex-col items-center gap-1 text-[#8E8A9C] dark:text-slate-400 hover:text-[#353148] dark:hover:text-white hover:bg-[#F8F6FC] dark:hover:bg-[#161230] transition-colors">
+            <button
+              onClick={() => {
+                setActiveActivity('details');
+                setLeftSidebarTab('details');
+                setShowExplorer(true);
+              }}
+              className="w-full py-2 rounded-xl flex flex-col items-center gap-1 text-[#8E8A9C] dark:text-slate-400 hover:text-[#353148] dark:hover:text-white hover:bg-[#F8F6FC] dark:hover:bg-[#161230] transition-colors"
+              title="Help & Problem Guide"
+            >
               <HelpCircle className="w-4 h-4" />
               <span className="text-[9px] font-medium">Help</span>
             </button>
@@ -684,33 +947,89 @@ export default function IDEWorkspace({
         </aside>
 
         {/* ----------------------------------------------------------------- */}
-        {/* LEFT COLUMN: FILE EXPLORER + CHALLENGE DETAILS                    */}
+        {/* DESKTOP LEFT COLUMN: TABBED SWITCHER (FILES / PROBLEM DETAILS)     */}
         {/* ----------------------------------------------------------------- */}
         {showExplorer && (
-          <div className="w-64 lg:w-72 flex-shrink-0 h-full">
-            <FileExplorer
-              files={files}
-              activeFileId={activeFileId}
-              challenge={currentChallenge}
-              testResults={executionResult?.testResults}
-              onSelectFile={(id) => {
-                setActiveFileId(id);
-                if (!openFileIds.includes(id)) {
-                  setOpenFileIds((prev) => [...prev, id]);
-                }
-                setActiveDiff(null);
-              }}
-              onCreateFile={handleCreateFile}
-              onDeleteFile={handleDeleteFile}
-              onRenameFile={handleRenameFile}
-            />
-          </div>
+          <>
+            <div
+              style={{ width: `${sidebarWidth}px` }}
+              className="hidden md:flex flex-shrink-0 h-full flex-col gap-2 min-w-0"
+            >
+              {/* Top Segmented Tab Switcher */}
+              <div className="p-1 rounded-xl bg-white dark:bg-[#100D22] border border-[#E4E0EC] dark:border-white/10 flex items-center shadow-xs flex-shrink-0">
+                <button
+                  onClick={() => setLeftSidebarTab('files')}
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                    leftSidebarTab === 'files'
+                      ? 'bg-[#7038F0] text-white shadow-xs'
+                      : 'text-[#8E8A9C] dark:text-slate-400 hover:text-[#353148] dark:hover:text-white'
+                  }`}
+                >
+                  <Files className="w-3.5 h-3.5" />
+                  <span>Files ({files.length})</span>
+                </button>
+                <button
+                  onClick={() => setLeftSidebarTab('details')}
+                  className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                    leftSidebarTab === 'details'
+                      ? 'bg-[#7038F0] text-white shadow-xs'
+                      : 'text-[#8E8A9C] dark:text-slate-400 hover:text-[#353148] dark:hover:text-white'
+                  }`}
+                >
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>Problem Details</span>
+                </button>
+              </div>
+
+              <div className="flex-1 min-h-0">
+                {leftSidebarTab === 'files' ? (
+                  <FileExplorer
+                    files={files}
+                    activeFileId={activeFileId}
+                    challenge={currentChallenge}
+                    testResults={executionResult?.testResults}
+                    onSelectFile={(id) => {
+                      setActiveFileId(id);
+                      if (!openFileIds.includes(id)) {
+                        setOpenFileIds((prev) => [...prev, id]);
+                      }
+                      setActiveDiff(null);
+                    }}
+                    onCreateFile={handleCreateFile}
+                    onDeleteFile={handleDeleteFile}
+                    onRenameFile={handleRenameFile}
+                  />
+                ) : (
+                  <ChallengeDetailsPanel
+                    challenge={currentChallenge}
+                    testResults={executionResult?.testResults}
+                    onOpenExplorer={() => setLeftSidebarTab('files')}
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Splitter Handle between Left Sidebar and Center Column */}
+            <div
+              onMouseDown={handleStartSidebarResize}
+              className="hidden md:flex w-2.5 -mx-1 items-center justify-center cursor-col-resize z-20 group hover:bg-[#7038F0]/15 rounded-full transition-colors select-none shrink-0"
+              title="Drag to resize sidebar width"
+            >
+              <div
+                className={`w-1 h-8 rounded-full transition-colors ${
+                  resizingSection === 'sidebar'
+                    ? 'bg-[#7038F0] dark:bg-[#A78BFA]'
+                    : 'bg-[#DCD8E8] dark:bg-white/15 group-hover:bg-[#7038F0] dark:group-hover:bg-[#A78BFA]'
+                }`}
+              />
+            </div>
+          </>
         )}
 
         {/* ----------------------------------------------------------------- */}
-        {/* CENTER COLUMN: TOOLBAR, TABS, MONACO EDITOR, BOTTOM TERMINAL      */}
+        {/* DESKTOP CENTER COLUMN: TOOLBAR, BREADCRUMB, TABS, EDITOR, TERMINAL */}
         {/* ----------------------------------------------------------------- */}
-        <div className="flex-1 flex flex-col h-full min-w-0 bg-white dark:bg-[#100D22] border border-[#E4E0EC] dark:border-white/10 rounded-2xl overflow-hidden shadow-xs transition-colors duration-200">
+        <div className="hidden md:flex flex-1 flex-col h-full min-w-0 bg-white dark:bg-[#100D22] border border-[#E4E0EC] dark:border-white/10 rounded-2xl overflow-hidden shadow-xs transition-colors duration-200">
           {/* Top Action Toolbar */}
           <TopToolbar
             challenge={currentChallenge}
@@ -729,6 +1048,19 @@ export default function IDEWorkspace({
             onResetChallenge={handleResetChallenge}
             onUpdateSettings={handleUpdateSettings}
           />
+
+          {/* Beginner-friendly Breadcrumb & Free-Look Reassurance Bar */}
+          <div className="px-3.5 py-1.5 bg-[#FAF9FD] dark:bg-[#120F28] border-b border-[#E4E0EC] dark:border-white/10 flex items-center justify-between text-[11px] text-[#8E8A9C] dark:text-slate-400 flex-shrink-0">
+            <div className="flex items-center gap-1.5 overflow-hidden text-ellipsis whitespace-nowrap">
+              <span className="font-semibold text-[#7038F0] dark:text-purple-400">{currentChallenge.title}</span>
+              <span>/</span>
+              <span className="font-mono text-slate-700 dark:text-slate-300 font-medium">{activeFile?.name || 'No file selected'}</span>
+            </div>
+            <div className="hidden lg:flex items-center gap-1.5 text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md font-medium">
+              <Sparkles className="w-3 h-3 text-emerald-500" />
+              <span>Explore freely • Run tests anytime without penalty</span>
+            </div>
+          </div>
 
           {/* Open File Tabs */}
           <EditorTabs
@@ -774,6 +1106,21 @@ export default function IDEWorkspace({
             )}
           </div>
 
+          {/* Vertical Resize Splitter Handle between Editor and Terminal */}
+          <div
+            onMouseDown={handleStartBottomResize}
+            className="h-2.5 -my-1 w-full flex items-center justify-center cursor-row-resize z-20 group hover:bg-[#7038F0]/15 rounded-full transition-colors select-none shrink-0"
+            title="Drag to resize terminal panel height"
+          >
+            <div
+              className={`h-1 w-12 rounded-full transition-colors ${
+                resizingSection === 'bottom'
+                  ? 'bg-[#7038F0] dark:bg-[#A78BFA]'
+                  : 'bg-[#DCD8E8] dark:bg-white/15 group-hover:bg-[#7038F0] dark:group-hover:bg-[#A78BFA]'
+              }`}
+            />
+          </div>
+
           {/* Bottom Panel: Terminal, Test Results, Problems, Output */}
           <BottomPanel
             executionResult={executionResult}
@@ -781,24 +1128,247 @@ export default function IDEWorkspace({
             onRunCode={handleRunCode}
             onRunTests={handleRunTests}
             testCases={currentChallenge.testCases}
+            height={bottomPanelHeight}
           />
         </div>
 
         {/* ----------------------------------------------------------------- */}
-        {/* RIGHT COLUMN: AI ASSISTANT                                        */}
+        {/* DESKTOP RIGHT COLUMN: AI ASSISTANT                                 */}
         {/* ----------------------------------------------------------------- */}
         {showAiAssistant && (
-          <AIAssistantPanel
-            activeFile={activeFile}
-            language={currentChallenge.language}
-            executionResult={executionResult}
-            onApplyCodeDirectly={handleApplyCodeDirectly}
-            onOpenDiff={(diff) => setActiveDiff(diff)}
-          />
+          <>
+            {/* Splitter Handle between Center and AI Assistant */}
+            <div
+              onMouseDown={handleStartAiResize}
+              className="hidden xl:flex w-2.5 -mx-1 items-center justify-center cursor-col-resize z-20 group hover:bg-[#7038F0]/15 rounded-full transition-colors select-none shrink-0"
+              title="Drag to resize AI Assistant width"
+            >
+              <div
+                className={`w-1 h-8 rounded-full transition-colors ${
+                  resizingSection === 'ai'
+                    ? 'bg-[#7038F0] dark:bg-[#A78BFA]'
+                    : 'bg-[#DCD8E8] dark:bg-white/15 group-hover:bg-[#7038F0] dark:group-hover:bg-[#A78BFA]'
+                }`}
+              />
+            </div>
+
+            <div
+              style={{ width: `${aiPanelWidth}px` }}
+              className="hidden xl:flex h-full flex-shrink-0 min-w-0"
+            >
+              <AIAssistantPanel
+                activeFile={activeFile}
+                language={currentChallenge.language}
+                executionResult={executionResult}
+                onApplyCodeDirectly={handleApplyCodeDirectly}
+                onOpenDiff={(diff) => setActiveDiff(diff)}
+              />
+            </div>
+          </>
         )}
+
+        {/* ----------------------------------------------------------------- */}
+        {/* MOBILE WORKSPACE CONTAINER (< md: 1 Full-screen view at a time)   */}
+        {/* ----------------------------------------------------------------- */}
+        <div className="md:hidden flex-1 flex flex-col h-full min-w-0 pb-16 overflow-hidden">
+          {mobileTab === 'editor' && (
+            <div className="flex-1 flex flex-col h-full bg-white dark:bg-[#100D22] rounded-2xl overflow-hidden border border-[#E4E0EC] dark:border-white/10">
+              <TopToolbar
+                challenge={currentChallenge}
+                challenges={DEFAULT_CHALLENGES}
+                onSelectChallenge={setActiveChallengeId}
+                isRunning={isRunning}
+                isSaving={isSaving}
+                hasDirtyFiles={hasDirtyFiles}
+                isDiffActive={activeDiff !== null}
+                settings={settings}
+                onRunCode={handleRunCode}
+                onRunTests={handleRunTests}
+                onSubmit={handleRunTests}
+                onSave={handleSave}
+                onToggleDiff={() => setActiveDiff(null)}
+                onResetChallenge={handleResetChallenge}
+                onUpdateSettings={handleUpdateSettings}
+              />
+              <div className="px-3 py-1 bg-[#FAF9FD] dark:bg-[#120F28] border-b border-[#E4E0EC] dark:border-white/10 text-[10px] text-[#8E8A9C] truncate">
+                <span className="font-semibold text-[#7038F0]">{currentChallenge.title}</span> / {activeFile?.name || 'No file'}
+              </div>
+              <EditorTabs
+                openFileIds={openFileIds}
+                activeFileId={activeFileId}
+                files={files}
+                onSelectTab={(id) => {
+                  setActiveFileId(id);
+                  setActiveDiff(null);
+                }}
+                onCloseTab={handleCloseTab}
+                onCreateNewTab={() => {
+                  const name = prompt('Enter new file name:', 'helper.js');
+                  if (name && name.trim()) handleCreateFile(name.trim());
+                }}
+              />
+              <div className="flex-1 min-h-0 relative">
+                {activeDiff ? (
+                  <MonacoDiffViewer
+                    originalCode={activeDiff.originalContent}
+                    modifiedCode={activeDiff.modifiedContent}
+                    language={activeFile?.language || currentChallenge.language}
+                    settings={settings}
+                    fileName={activeFile?.name || 'File'}
+                    diffDescription={activeDiff.description}
+                    onAccept={handleAcceptDiff}
+                    onReject={() => setActiveDiff(null)}
+                  />
+                ) : activeFile ? (
+                  <MonacoCodeEditor
+                    code={activeFile.content}
+                    language={activeFile.language}
+                    settings={settings}
+                    onChange={handleCodeChange}
+                    onSave={handleSave}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-[#8E8A9C] dark:text-slate-500 text-xs p-4 text-center">
+                    Select a file in Files tab to start coding.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {mobileTab === 'files' && (
+            <div className="flex-1 h-full min-h-0">
+              <FileExplorer
+                files={files}
+                activeFileId={activeFileId}
+                challenge={currentChallenge}
+                testResults={executionResult?.testResults}
+                onSelectFile={(id) => {
+                  setActiveFileId(id);
+                  if (!openFileIds.includes(id)) {
+                    setOpenFileIds((prev) => [...prev, id]);
+                  }
+                  setActiveDiff(null);
+                  setMobileTab('editor');
+                }}
+                onCreateFile={handleCreateFile}
+                onDeleteFile={handleDeleteFile}
+                onRenameFile={handleRenameFile}
+              />
+            </div>
+          )}
+
+          {mobileTab === 'details' && (
+            <div className="flex-1 h-full min-h-0">
+              <ChallengeDetailsPanel
+                challenge={currentChallenge}
+                testResults={executionResult?.testResults}
+                onOpenExplorer={() => setMobileTab('files')}
+              />
+            </div>
+          )}
+
+          {mobileTab === 'terminal' && (
+            <div className="flex-1 h-full min-h-0 bg-white dark:bg-[#100D22] rounded-2xl overflow-hidden border border-[#E4E0EC] dark:border-white/10 flex flex-col">
+              <BottomPanel
+                executionResult={executionResult}
+                isRunning={isRunning}
+                onRunCode={handleRunCode}
+                onRunTests={handleRunTests}
+                testCases={currentChallenge.testCases}
+              />
+            </div>
+          )}
+
+          {mobileTab === 'ai' && (
+            <div className="flex-1 h-full min-h-0">
+              <AIAssistantPanel
+                activeFile={activeFile}
+                language={currentChallenge.language}
+                executionResult={executionResult}
+                onApplyCodeDirectly={(code) => {
+                  handleApplyCodeDirectly(code);
+                  setMobileTab('editor');
+                }}
+                onOpenDiff={(diff) => {
+                  setActiveDiff(diff);
+                  setMobileTab('editor');
+                }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* ----------------------------------------------------------------- */}
+        {/* MOBILE BOTTOM NAVIGATION BAR (< md)                                */}
+        {/* ----------------------------------------------------------------- */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 h-14 bg-white/95 dark:bg-[#0E0C22]/95 backdrop-blur-md border-t border-[#E4E0EC] dark:border-white/10 flex items-center justify-around px-2 z-40 text-xs">
+          <button
+            onClick={() => setMobileTab('editor')}
+            className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg transition-colors ${
+              mobileTab === 'editor'
+                ? 'text-[#7038F0] dark:text-[#C4B5FD] font-bold'
+                : 'text-[#8E8A9C] dark:text-slate-400'
+            }`}
+          >
+            <Code2 className="w-4 h-4" />
+            <span className="text-[10px]">Editor</span>
+          </button>
+          <button
+            onClick={() => setMobileTab('files')}
+            className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg transition-colors ${
+              mobileTab === 'files'
+                ? 'text-[#7038F0] dark:text-[#C4B5FD] font-bold'
+                : 'text-[#8E8A9C] dark:text-slate-400'
+            }`}
+          >
+            <Files className="w-4 h-4" />
+            <span className="text-[10px]">Files</span>
+          </button>
+          <button
+            onClick={() => setMobileTab('details')}
+            className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg transition-colors ${
+              mobileTab === 'details'
+                ? 'text-[#7038F0] dark:text-[#C4B5FD] font-bold'
+                : 'text-[#8E8A9C] dark:text-slate-400'
+            }`}
+          >
+            <BookOpen className="w-4 h-4" />
+            <span className="text-[10px]">Details</span>
+          </button>
+          <button
+            onClick={() => setMobileTab('terminal')}
+            className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg transition-colors ${
+              mobileTab === 'terminal'
+                ? 'text-[#7038F0] dark:text-[#C4B5FD] font-bold'
+                : 'text-[#8E8A9C] dark:text-slate-400'
+            }`}
+          >
+            <TerminalIcon className="w-4 h-4" />
+            <span className="text-[10px]">Terminal</span>
+          </button>
+          <button
+            onClick={() => setMobileTab('ai')}
+            className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg transition-colors ${
+              mobileTab === 'ai'
+                ? 'text-[#7038F0] dark:text-[#C4B5FD] font-bold'
+                : 'text-[#8E8A9C] dark:text-slate-400'
+            }`}
+          >
+            <Sparkles className="w-4 h-4" />
+            <span className="text-[10px]">AI Coach</span>
+          </button>
+        </div>
       </div>
 
-      {/* ===================================================================== */}
+      {/* Active Resize Overlay to prevent mouse event loss or selection issues during fast dragging */}
+      {resizingSection && (
+        <div
+          className={`fixed inset-0 z-50 select-none ${
+            resizingSection === 'bottom' ? 'cursor-row-resize' : 'cursor-col-resize'
+          }`}
+        />
+      )}
       {/* IN-IDE MODAL 1: CHALLENGES CATALOG                                    */}
       {/* ===================================================================== */}
       {ideActiveModal === 'challenges' && (

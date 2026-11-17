@@ -141,7 +141,31 @@ The login API returns a 500 error when valid credentials are provided. Find and 
     solutionHints: [
       'Check if validateUser(email, password) returns null for invalid credentials.',
       'Return res.status(401).json({ error: "Invalid credentials" }) when !user, and res.status(200).json({ user }) when valid.'
-    ]
+    ],
+    scenarioContext: 'In our production authentication microservice, QA reported that after the latest refactor, valid users receive a 500 Internal Server Error when trying to log in. The mobile and web frontends are blocked from authenticating. You need to inspect src/app.js and src/utils.js to restore proper authentication response handling.',
+    inputFormat: 'HTTP POST /api/login with JSON body containing email (string) and password (string).',
+    outputFormat: 'HTTP 200 with JSON { status: 200, user: { id, email, name } } on success; HTTP 401 with { error: "Invalid credentials" } on bad credentials; HTTP 400 with { error: "Email and password are required" } on missing fields.',
+    constraints: [
+      'Must not modify the signature of validateUser() in utils.js',
+      'Do not leak sensitive password hashes in the returned user payload',
+      'Must return valid JSON with proper HTTP response status headers',
+      'Should handle missing fields with HTTP 400 bad request'
+    ],
+    sampleScenarios: [
+      {
+        title: 'Valid Credentials',
+        input: 'POST /api/login { "email": "alex@devpractice.io", "password": "password123" }',
+        output: 'Status 200 { "status": 200, "user": { "id": 1, "email": "alex@devpractice.io", "name": "Alex Developer" } }',
+        explanation: 'User exists in the database and password matches, returning full authenticated profile.'
+      },
+      {
+        title: 'Incorrect Password',
+        input: 'POST /api/login { "email": "alex@devpractice.io", "password": "wrongpassword" }',
+        output: 'Status 401 { "error": "Invalid credentials" }',
+        explanation: 'User is found but authentication fails verification check.'
+      }
+    ],
+    architectureNotes: 'The service sits behind an API Gateway routing traffic to Node.js microservices. Proper status codes (400, 401, 200) are required for gateway metrics and client error handling.'
   },
   {
     id: 'python-race-condition',
@@ -259,8 +283,27 @@ if __name__ == "__main__":
     ],
     solutionHints: [
       'Use self.lock to protect the critical section in purchase().',
-      'Ensure both checking self.stock and modifying self.stock are inside the synchronized block.'
-    ]
+      'Ensure both checking self.stock and modifying self.stock are inside the synchronized block.',
+      'Prefer Python context manager: `with self.lock:` to ensure locks are cleanly released even on errors.'
+    ],
+    scenarioContext: 'During peak flash sales on our e-commerce platform, multiple concurrent checkout requests for high-demand items cause inventory levels to drop into negative numbers (e.g. -3 units). Because stock check and stock decrement are not atomic, concurrent threads read stock > 0 before previous threads decrement, leading to overselling.',
+    inputFormat: 'InventoryService.purchase(quantity: int) called concurrently by up to 10 buyer threads.',
+    outputFormat: 'Returns boolean True if purchase was successfully fulfilled within stock limits, False otherwise. Stock must never fall below 0.',
+    constraints: [
+      'Thread-safe: Must safely support multi-threaded concurrent calls using threading.Lock',
+      'Zero Overselling: Final stock must be >= 0 under all race conditions',
+      'Simulate realistic I/O: Maintain the time.sleep(0.01) simulated persistence delay inside the critical section',
+      'Do not deadlock: Always release the lock even if an exception occurs (use context manager `with self.lock:`)'
+    ],
+    sampleScenarios: [
+      {
+        title: 'Concurrent Flash Sale (5 items, 10 buyers)',
+        input: 'simulate_flash_sale() with initial_stock=5, 10 concurrent buyer threads',
+        output: 'Final stock: 0, Successful orders: 5',
+        explanation: 'Exactly 5 purchases succeed, the remaining 5 fail gracefully, and inventory never drops below zero.'
+      }
+    ],
+    architectureNotes: 'In distributed enterprise systems, this pattern corresponds to Redis distributed mutexes (Redlock) or database row-level locking (SELECT FOR UPDATE).'
   },
   {
     id: 'java-pagination-api',

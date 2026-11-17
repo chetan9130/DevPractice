@@ -22,6 +22,7 @@ interface BottomPanelProps {
   onRunCode: () => void;
   onRunTests: () => void;
   testCases: TestCase[];
+  height?: number;
 }
 
 export default function BottomPanel({
@@ -30,6 +31,7 @@ export default function BottomPanel({
   onRunCode,
   onRunTests,
   testCases,
+  height,
 }: BottomPanelProps) {
   const [activeTab, setActiveTab] = useState<'terminal' | 'tests' | 'problems' | 'output'>('terminal');
   const [shellType, setShellType] = useState<'bash' | 'zsh' | 'node'>('bash');
@@ -40,7 +42,10 @@ export default function BottomPanel({
   const problemCount = executionResult?.stderr ? 1 : 1;
 
   return (
-    <div className="flex flex-col h-56 bg-white dark:bg-[#100D22] border-t border-[#E4E0EC] dark:border-white/10 text-xs select-none flex-shrink-0 transition-colors duration-200">
+    <div
+      style={{ height: height ? `${height}px` : undefined }}
+      className={`flex flex-col ${height ? '' : 'h-56'} bg-white dark:bg-[#100D22] border-t border-[#E4E0EC] dark:border-white/10 text-xs select-none flex-shrink-0 transition-colors duration-200`}
+    >
       {/* Tab Bar */}
       <div className="flex items-center justify-between px-3 border-b border-[#E4E0EC] dark:border-white/10 h-9 bg-[#F8F6FC] dark:bg-[#0F0C24]">
         <div className="flex items-center gap-4 h-full">

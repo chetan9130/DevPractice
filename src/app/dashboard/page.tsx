@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,6 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { StatsCounter } from '@/components/ui/stats-counter';
 import IDEWorkspace from '@/components/ide/IDEWorkspace';
+import { DEFAULT_CHALLENGES } from '@/lib/ide/defaultChallenges';
 import {
   LayoutDashboard,
   Code2,
@@ -59,6 +60,9 @@ import {
   ExternalLink as ExternalLinkIcon,
   Sun,
   Moon,
+  Menu,
+  ArrowRight,
+  CornerDownLeft,
 } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -199,6 +203,95 @@ const PROJECTS_DATA: ProjectItem[] = [
   },
 ];
 
+interface MockExam {
+  id: string;
+  company: string;
+  duration: string;
+  durationMinutes: number;
+  sections: string;
+  passingScore: string;
+  badge: string;
+  challengeId: string;
+  role: string;
+  description: string;
+  rules: string[];
+}
+
+const MOCK_EXAMS_DATA: MockExam[] = [
+  {
+    id: 'tcs-nqt',
+    company: 'TCS NQT National Qualifier Mock',
+    duration: '90 Minutes',
+    durationMinutes: 90,
+    sections: 'Debugging (30m) • Hands-on Coding (60m)',
+    passingScore: '75%',
+    badge: 'Campus Drive 2026',
+    challengeId: 'jwt-auth-challenge',
+    role: 'Systems Engineer & Ninja / Digital',
+    description: 'Simulates the official TCS National Qualifier Test. Includes broken token verification debugging, route guard patching, and production unit test fulfillment under strict time constraints.',
+    rules: [
+      '90-minute timed proctored round with countdown timer',
+      'Monaco Code Editor + Node.js Jest test runner integrated in-browser',
+      'AI Assistant restricted to strict proctoring mode (diagnostic questions only)',
+      'Passing Cutoff: 75% test suite assertion score required'
+    ],
+  },
+  {
+    id: 'infosys-sp',
+    company: 'Infosys SP / DSE Specialist Round',
+    duration: '120 Minutes',
+    durationMinutes: 120,
+    sections: 'Full Stack REST Bugfix • DSA Optimization',
+    passingScore: '70%',
+    badge: 'Specialist Programmer',
+    challengeId: 'java-pagination-api',
+    role: 'Specialist Programmer & Digital Specialist Engineer',
+    description: 'High-intensity assessment for Specialist roles. Debug REST endpoints, resolve database pagination bugs, and eliminate N+1 query performance bottlenecks.',
+    rules: [
+      '120-minute timed environment simulating official Infosys HackerEarth rounds',
+      'Full Java / Spring Boot controller environment with automated test suites',
+      'Proctored AI policy: diagnostic hints only with strict prompt skepticism',
+      'Passing Cutoff: 70% minimum score required'
+    ],
+  },
+  {
+    id: 'wipro-elite',
+    company: 'Wipro Elite National Talent Hunt Mock',
+    duration: '60 Minutes',
+    durationMinutes: 60,
+    sections: 'Code Analysis • Error Diagnosis • Logic',
+    passingScore: '70%',
+    badge: 'Elite Hiring',
+    challengeId: 'ts-state-machine',
+    role: 'Project Engineer (Elite Candidate)',
+    description: 'Standard Wipro Elite NTH engineering screening. Tests state transition safety, edge cases, and runtime exception resolution.',
+    rules: [
+      '60-minute timed assessment covering state machine debugging & logic verification',
+      'TypeScript / Node runner with preconfigured test suites and assertion runner',
+      'Proctored anti-cheat mode: external copy-paste monitoring simulation',
+      'Passing Cutoff: 70% benchmark score'
+    ],
+  },
+  {
+    id: 'tier1-product',
+    company: 'Tier-1 Product Company Timed Screening',
+    duration: '60 Minutes',
+    durationMinutes: 60,
+    sections: 'Concurrency Bugs • System Design • Unit Tests',
+    passingScore: '85%',
+    badge: 'Product Track',
+    challengeId: 'python-race-condition',
+    role: 'Software Development Engineer I / Backend',
+    description: 'Simulates rigorous top-tier product company online technical screening. Diagnose race conditions, mutex deadlocks, and asynchronous thread safety.',
+    rules: [
+      '60-minute high-pressure timed coding screening',
+      'Python 3 asyncio environment with high-concurrency race condition scenarios',
+      'AI Coach restricted to architectural hints only under strict timer policy',
+      'Passing Cutoff: 85% benchmark required to pass top-tier product bar'
+    ],
+  },
+];
+
 function DashboardView() {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -221,8 +314,8 @@ function DashboardView() {
     return 'Dashboard';
   });
 
-  // Dedicated setter that persists to localStorage and URL history without full reload
-  const setActiveNav = (nav: string) => {
+  // Dedicated setter that persists to localStorage and URL history with pushState for back/forward navigation
+  const setActiveNav = (nav: string, addToHistory: boolean = true) => {
     setActiveNavState(nav);
     if (typeof window !== 'undefined') {
       localStorage.setItem('devpractice_active_nav', nav);
@@ -237,15 +330,59 @@ function DashboardView() {
         url.searchParams.delete('view');
         url.searchParams.set('tab', nav);
       }
-      window.history.replaceState(null, '', url.pathname + url.search);
+      if (addToHistory) {
+        window.history.pushState({ nav }, '', url.pathname + url.search);
+      } else {
+        window.history.replaceState({ nav }, '', url.pathname + url.search);
+      }
     }
   };
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [activeChallengeModal, setActiveChallengeModal] = useState<string | null>(null);
+  const [activeMockExam, setActiveMockExam] = useState<MockExam | null>(null);
+  const [activeAssessment, setActiveAssessment] = useState<any | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('devpractice_active_assessment');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          return null;
+        }
+      }
+    }
+    return null;
+  });
+
+  const handleStartMockExam = (exam: MockExam) => {
+    setActiveMockExam(exam);
+  };
+
+  const handleLaunchMockExamInIDE = (exam: MockExam) => {
+    setSelectedChallengeForIDE(exam.challengeId);
+    const assessmentData = {
+      id: exam.id,
+      company: exam.company,
+      duration: exam.duration,
+      durationMinutes: exam.durationMinutes,
+      passingScore: exam.passingScore,
+      badge: exam.badge,
+      startedAt: Date.now(),
+    };
+    setActiveAssessment(assessmentData);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('devpractice_active_challenge', exam.challengeId);
+      localStorage.setItem('devpractice_active_assessment', JSON.stringify(assessmentData));
+    }
+    setActiveMockExam(null);
+    setActiveNav('IDE Workspace');
+  };
+
   const [selectedChallengeForIDE, setSelectedChallengeForIDE] = useState<string>(() => {
     if (challengeParam) return challengeParam;
     if (typeof window !== 'undefined') {
@@ -254,6 +391,39 @@ function DashboardView() {
     }
     return 'jwt-auth-challenge';
   });
+
+  // Browser back/forward navigation sync
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      const url = new URL(window.location.href);
+      const view = url.searchParams.get('view');
+      const tab = url.searchParams.get('tab');
+      const chal = url.searchParams.get('challenge');
+
+      let targetNav = 'Dashboard';
+      if (e.state?.nav) {
+        targetNav = e.state.nav;
+      } else if (view === 'ide') {
+        targetNav = 'IDE Workspace';
+      } else if (tab) {
+        targetNav = tab;
+      }
+
+      setActiveNavState(targetNav);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('devpractice_active_nav', targetNav);
+      }
+      if (chal) {
+        setSelectedChallengeForIDE(chal);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('devpractice_active_challenge', chal);
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     if (viewParam === 'ide') {
@@ -318,17 +488,210 @@ function DashboardView() {
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
+  // Global live search state & index
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [searchHighlightedIndex, setSearchHighlightedIndex] = useState(0);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Close search dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setSearchFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Keyboard shortcut Ctrl+K to focus search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
+        setSearchFocused(true);
         searchInputRef.current?.focus();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Build indexed items across the entire website
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+
+    const queryTokens = q.split(/\s+/).filter(Boolean);
+
+    const matchesTokens = (text: string) => {
+      const lower = text.toLowerCase();
+      return queryTokens.every((token) => lower.includes(token));
+    };
+
+    const results: Array<{
+      id: string;
+      category: 'Challenges' | 'Projects' | 'Navigation' | 'Practice' | 'Assessments';
+      title: string;
+      subtitle: string;
+      badge?: string;
+      meta?: string;
+      icon: any;
+      action: () => void;
+    }> = [];
+
+    // 1. Challenges (DEFAULT_CHALLENGES)
+    DEFAULT_CHALLENGES.forEach((c) => {
+      const matchTarget = `${c.title} ${c.description} ${c.language} ${c.difficulty} ${c.tags?.join(' ') || ''} ${(c as any).scenarioContext || ''} challenge`;
+      if (matchesTokens(matchTarget)) {
+        results.push({
+          id: `challenge-${c.id}`,
+          category: 'Challenges',
+          title: c.title,
+          subtitle: c.description,
+          badge: c.difficulty,
+          meta: c.language,
+          icon: Code2,
+          action: () => {
+            setSelectedChallengeForIDE(c.id);
+            setActiveNav('IDE Workspace');
+            setSearchQuery('');
+            setSearchFocused(false);
+          },
+        });
+      }
+    });
+
+    // 2. Projects (PROJECTS_DATA)
+    PROJECTS_DATA.forEach((p) => {
+      const matchTarget = `${p.title} ${p.description} ${p.category} ${p.stack.join(' ')} ${p.modes.join(' ')} project`;
+      if (matchesTokens(matchTarget)) {
+        results.push({
+          id: `project-${p.id}`,
+          category: 'Projects',
+          title: p.title,
+          subtitle: p.description,
+          badge: p.difficulty,
+          meta: p.stack.slice(0, 3).join(', '),
+          icon: FolderGit2,
+          action: () => {
+            setActiveNav('Projects');
+            setProjectSearch(p.title);
+            setSearchQuery('');
+            setSearchFocused(false);
+          },
+        });
+      }
+    });
+
+    // 3. Navigation & Platform Pages
+    const pages = [
+      { name: 'Dashboard', desc: 'Main student dashboard, stats, daily goals, readiness score', icon: LayoutDashboard },
+      { name: 'IDE Workspace', desc: 'Browser Monaco code editor, real-time terminal, test runner, AI debugging coach', icon: Terminal },
+      { name: 'Projects', desc: 'Real-world distributed systems, fullstack microservices repositories', icon: FolderGit2 },
+      { name: 'Practice', desc: 'Interactive practice arena: debugging, environment rescue, feature development, interview sim', icon: Code2 },
+      { name: 'Challenges', desc: '500+ curated system engineering and placement coding challenges', icon: Layers },
+      { name: 'Assessments', desc: 'Timed mock placement tests, proctored assessments, skill certifications', icon: ClipboardList },
+      { name: 'Leaderboard', desc: 'Global rankings, daily streak champions, solved challenge metrics', icon: BarChart2 },
+      { name: 'Analytics', desc: 'Detailed skill breakdown, error recovery times, token efficiency metrics', icon: TrendingUp },
+      { name: 'Documentation', desc: 'Placement preparation roadmap, interview cheat sheets, guides', icon: BookOpen },
+    ];
+
+    pages.forEach((p) => {
+      const matchTarget = `${p.name} ${p.desc} page`;
+      if (matchesTokens(matchTarget)) {
+        results.push({
+          id: `nav-${p.name}`,
+          category: 'Navigation',
+          title: p.name,
+          subtitle: p.desc,
+          badge: 'Page',
+          icon: p.icon,
+          action: () => {
+            setActiveNav(p.name);
+            setSearchQuery('');
+            setSearchFocused(false);
+          },
+        });
+      }
+    });
+
+    // 4. Practice Modes
+    const practiceModes = [
+      { id: 'debugging', title: 'Debugging Round', desc: 'Fix production bugs, race conditions, memory leaks, and broken unit tests', mode: 'debugging' },
+      { id: 'rescue', title: 'Environment Rescue', desc: 'Troubleshoot crashed Docker containers, failing dependencies, network faults', mode: 'rescue' },
+      { id: 'feature', title: 'Feature Development', desc: 'Build scalable APIs, caching layers, and database schemas against specs', mode: 'feature' },
+      { id: 'interview', title: 'Interview Simulation', desc: 'Timed placement interview simulation under proctored policy', mode: 'interview' },
+    ];
+
+    practiceModes.forEach((pm) => {
+      const matchTarget = `${pm.title} ${pm.desc} practice`;
+      if (matchesTokens(matchTarget)) {
+        results.push({
+          id: `practice-${pm.id}`,
+          category: 'Practice',
+          title: pm.title,
+          subtitle: pm.desc,
+          badge: 'Mode',
+          icon: Zap,
+          action: () => {
+            setActiveNav('Practice');
+            setSelectedPracticeMode(pm.mode as any);
+            setSearchQuery('');
+            setSearchFocused(false);
+          },
+        });
+      }
+    });
+
+    // 5. Assessments & Mock Exams
+    MOCK_EXAMS_DATA.forEach((exam) => {
+      const matchTarget = `${exam.company} ${exam.badge} ${exam.sections} ${exam.role} ${exam.description} mock test assessment`;
+      if (matchesTokens(matchTarget)) {
+        results.push({
+          id: `exam-${exam.id}`,
+          category: 'Assessments',
+          title: exam.company,
+          subtitle: `${exam.duration} • Cutoff ${exam.passingScore} • ${exam.sections}`,
+          badge: exam.badge,
+          meta: `Target: ${exam.role}`,
+          icon: ClipboardList,
+          action: () => {
+            setActiveNav('Assessments');
+            setActiveMockExam(exam);
+            setSearchQuery('');
+            setSearchFocused(false);
+          },
+        });
+      }
+    });
+
+    return results;
+  }, [searchQuery]);
+
+  useEffect(() => {
+    setSearchHighlightedIndex(0);
+  }, [searchQuery]);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!searchResults.length) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSearchHighlightedIndex((prev) => (prev + 1) % searchResults.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSearchHighlightedIndex((prev) => (prev - 1 + searchResults.length) % searchResults.length);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (searchResults[searchHighlightedIndex]) {
+        searchResults[searchHighlightedIndex].action();
+      }
+    } else if (e.key === 'Escape') {
+      setSearchFocused(false);
+      searchInputRef.current?.blur();
+    }
+  };
 
   const toggleGoal = (id: string) => {
     setDailyGoals((prev) =>
@@ -485,7 +848,14 @@ function DashboardView() {
     return (
       <IDEWorkspace
         initialChallengeId={selectedChallengeForIDE}
+        assessmentMode={activeAssessment}
         onExitWorkspace={() => setActiveNav('Dashboard')}
+        onExitAssessment={() => {
+          setActiveAssessment(null);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('devpractice_active_assessment');
+          }
+        }}
         onNavigateTab={(tab) => setActiveNav(tab)}
       />
     );
@@ -499,7 +869,7 @@ function DashboardView() {
       <motion.aside
         animate={{ width: sidebarCollapsed ? 68 : 248 }}
         transition={{ duration: 0.26, ease: [0.25, 0.1, 0.25, 1] }}
-        className={`bg-white dark:bg-[#0A091E] border-r border-[#E4E0EC] dark:border-[#1B173B] shrink-0 flex flex-col justify-between ${
+        className={`hidden md:flex bg-white dark:bg-[#0A091E] border-r border-[#E4E0EC] dark:border-[#1B173B] shrink-0 flex-col justify-between ${
           sidebarCollapsed ? 'px-2 py-4' : 'p-3.5'
         } h-screen sticky top-0 overflow-y-auto select-none relative z-30 transition-all font-sans`}
       >
@@ -742,26 +1112,264 @@ function DashboardView() {
       </motion.aside>
 
       {/* ========================================================================= */}
+      {/* MOBILE SIDEBAR DRAWER (< md)                                              */}
+      {/* ========================================================================= */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div
+            onClick={() => setMobileMenuOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+          />
+          <div className="relative w-72 max-w-[85vw] bg-white dark:bg-[#0A091E] h-full flex flex-col justify-between p-4 shadow-2xl z-10 overflow-y-auto font-sans">
+            <div>
+              {/* Brand & Close */}
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#E4E0EC] dark:border-white/10">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-[#7038F0] dark:bg-[#8C60F3] flex items-center justify-center text-white font-mono font-bold text-xs shadow-md">
+                    {'</>'}
+                  </div>
+                  <div>
+                    <span className="text-base font-bold text-[#353148] dark:text-white">DevPractice</span>
+                    <span className="ml-1.5 text-[9px] font-semibold bg-[#F0EDF8] dark:bg-[#221A4B] text-[#554E6D] dark:text-[#E4E0EC] px-1.5 py-0.5 rounded">
+                      Student
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-1.5 rounded-lg text-[#8E8A9C] hover:text-[#353148] dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Navigation Links */}
+              <nav className="space-y-1">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeNav === item.name;
+
+                  return (
+                    <button
+                      key={item.name}
+                      onClick={() => {
+                        setActiveNav(item.name);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                        isActive
+                          ? 'bg-[#7038F0] text-white shadow-xs'
+                          : 'text-[#6E6A7D] dark:text-[#8E8A9C] hover:bg-[#F4F2FA] dark:hover:bg-[#14112E]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Icon className="w-4 h-4" />
+                        <span>{item.name}</span>
+                      </div>
+                      {item.badge && (
+                        <span
+                          className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md ${
+                            isActive ? 'bg-white/20 text-white' : 'bg-[#F0EDF8] dark:bg-[#1A1636] text-[#6E6A7D] dark:text-slate-300'
+                          }`}
+                        >
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Bottom User Card */}
+            <div className="pt-3 border-t border-[#E4E0EC] dark:border-white/10 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-pink-500 flex items-center justify-center text-white font-bold text-xs">
+                  {firstName.slice(0, 1)}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-[#353148] dark:text-white truncate">{displayName}</p>
+                  <p className="text-[10px] text-[#8E8A9C] truncate">{displayRole}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                title="Log Out"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
       {/* 2. MAIN APP CONTENT CONTAINER                                             */}
       {/* ========================================================================= */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         {/* Top Header */}
-        <header className="h-16 bg-white dark:bg-[#0B0914] border-b border-[#E4E0EC] dark:border-white/10 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-40 transition-colors duration-200">
-          {/* Global Search Bar with Ctrl+K shortcut */}
-          <div className="relative w-full max-w-lg">
-            <div className="bg-[#F8F6FC] dark:bg-[#151229] rounded-xl px-4 py-2 flex items-center gap-3 border border-transparent focus-within:border-[#7038F0]/40 dark:focus-within:border-[#8C60F3]/40 focus-within:bg-white dark:focus-within:bg-[#181432] transition-all shadow-xs">
-              <Search className="w-4 h-4 text-[#8E8A9C] flex-shrink-0" />
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search challenges, projects, or topics..."
-                className="w-full bg-transparent text-xs text-[#353148] dark:text-white placeholder-[#8E8A9C] dark:placeholder-slate-400 outline-none"
-              />
-              <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono font-semibold text-[#8E8A9C] dark:text-slate-300 bg-white dark:bg-[#1E1A38] border border-[#CCCAD2] dark:border-white/10 rounded shadow-xs flex-shrink-0">
-                Ctrl K
-              </kbd>
+        <header className="h-16 bg-white dark:bg-[#0B0914] border-b border-[#E4E0EC] dark:border-white/10 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-40 transition-colors duration-200 gap-3">
+          {/* Mobile Hamburger & Global Search Bar with Ctrl+K shortcut */}
+          <div className="flex items-center gap-2.5 w-full max-w-lg">
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden p-2 rounded-xl text-[#353148] dark:text-white hover:bg-[#F8F6FC] dark:hover:bg-[#1A1636] border border-[#E4E0EC] dark:border-white/10 shrink-0"
+              title="Open Navigation Menu"
+              aria-label="Open Navigation Menu"
+            >
+              <Menu className="w-4.5 h-4.5" />
+            </button>
+            <div ref={searchContainerRef} className="relative w-full">
+              <div className="bg-[#F8F6FC] dark:bg-[#151229] rounded-xl px-3.5 py-2 flex items-center gap-2.5 border border-transparent focus-within:border-[#7038F0]/40 dark:focus-within:border-[#8C60F3]/40 focus-within:bg-white dark:focus-within:bg-[#181432] transition-all shadow-xs">
+                <Search className="w-4 h-4 text-[#8E8A9C] flex-shrink-0" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setSearchFocused(true);
+                  }}
+                  onFocus={() => setSearchFocused(true)}
+                  onKeyDown={handleSearchKeyDown}
+                  placeholder="Search challenges, projects, or topics..."
+                  className="w-full bg-transparent text-xs text-[#353148] dark:text-white placeholder-[#8E8A9C] dark:placeholder-slate-400 outline-none"
+                />
+                {searchQuery ? (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSearchFocused(false);
+                      searchInputRef.current?.focus();
+                    }}
+                    className="p-1 rounded-md text-[#8E8A9C] hover:text-[#353148] dark:hover:text-white transition-colors flex-shrink-0"
+                    title="Clear search"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                ) : (
+                  <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono font-semibold text-[#8E8A9C] dark:text-slate-300 bg-white dark:bg-[#1E1A38] border border-[#CCCAD2] dark:border-white/10 rounded shadow-xs flex-shrink-0">
+                    Ctrl K
+                  </kbd>
+                )}
+              </div>
+
+              {/* Live Search Results Dropdown Panel */}
+              {searchFocused && searchQuery.trim().length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#100D22] border border-[#E4E0EC] dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150 text-xs">
+                  {/* Results Header */}
+                  <div className="flex items-center justify-between px-3.5 py-2 border-b border-[#E4E0EC] dark:border-white/10 bg-[#FAF9FD] dark:bg-[#15112E] text-[11px] text-[#8E8A9C] dark:text-slate-400 font-medium">
+                    <span>
+                      {searchResults.length === 0
+                        ? 'No matches'
+                        : `Found ${searchResults.length} result${searchResults.length > 1 ? 's' : ''}`}
+                    </span>
+                    <span className="text-[10px] hidden sm:inline text-purple-600 dark:text-purple-400 font-medium">
+                      Press ↵ to select • Esc to close
+                    </span>
+                  </div>
+
+                  {/* Scrollable list */}
+                  <div className="max-h-80 overflow-y-auto p-1.5 space-y-1 custom-scrollbar">
+                    {searchResults.length > 0 ? (
+                      searchResults.map((item, idx) => {
+                        const Icon = item.icon;
+                        const isHighlighted = idx === searchHighlightedIndex;
+
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => item.action()}
+                            onMouseEnter={() => setSearchHighlightedIndex(idx)}
+                            className={`p-2.5 rounded-xl cursor-pointer transition-colors flex items-start justify-between gap-3 ${
+                              isHighlighted
+                                ? 'bg-[#7038F0]/10 dark:bg-[#7038F0]/25 text-[#353148] dark:text-white border border-[#7038F0]/30 dark:border-[#7038F0]/50'
+                                : 'hover:bg-[#F8F6FC] dark:hover:bg-[#161230] text-[#353148] dark:text-slate-200 border border-transparent'
+                            }`}
+                          >
+                            <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                              <div
+                                className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
+                                  item.category === 'Challenges'
+                                    ? 'bg-rose-500/15 text-rose-500'
+                                    : item.category === 'Projects'
+                                    ? 'bg-sky-500/15 text-sky-500'
+                                    : item.category === 'Practice'
+                                    ? 'bg-amber-500/15 text-amber-500'
+                                    : item.category === 'Assessments'
+                                    ? 'bg-emerald-500/15 text-emerald-500'
+                                    : 'bg-purple-500/15 text-[#7038F0] dark:text-purple-400'
+                                }`}
+                              >
+                                <Icon className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                                  <span className="font-bold text-xs truncate text-[#353148] dark:text-white">
+                                    {item.title}
+                                  </span>
+                                  <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-white/10 text-[#8E8A9C] dark:text-slate-300 shrink-0">
+                                    {item.category}
+                                  </span>
+                                  {item.badge && (
+                                    <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700/40 shrink-0">
+                                      {item.badge}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-[#8E8A9C] dark:text-slate-400 truncate leading-tight">
+                                  {item.subtitle}
+                                </p>
+                                {item.meta && (
+                                  <div className="mt-1 text-[10px] text-[#7038F0] dark:text-purple-300 font-mono">
+                                    {item.meta}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="shrink-0 flex items-center pt-1 text-[#8E8A9C] dark:text-slate-400">
+                              {isHighlighted ? (
+                                <CornerDownLeft className="w-3.5 h-3.5 text-[#7038F0] dark:text-purple-400" />
+                              ) : (
+                                <ArrowRight className="w-3.5 h-3.5 opacity-50" />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="p-6 text-center text-[#8E8A9C] dark:text-slate-400 space-y-1">
+                        <p className="font-semibold text-xs text-[#353148] dark:text-slate-200">
+                          No results found for &ldquo;{searchQuery}&rdquo;
+                        </p>
+                        <p className="text-[11px]">
+                          Try keywords like <span className="font-mono text-[#7038F0] dark:text-purple-300">jwt</span>, <span className="font-mono text-[#7038F0] dark:text-purple-300">race condition</span>, <span className="font-mono text-[#7038F0] dark:text-purple-300">microservices</span>, or <span className="font-mono text-[#7038F0] dark:text-purple-300">debug</span>.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer Shortcuts */}
+                  <div className="px-3.5 py-2 border-t border-[#E4E0EC] dark:border-white/10 bg-[#FAF9FD] dark:bg-[#15112E] flex items-center justify-between text-[10px] text-[#8E8A9C] dark:text-slate-400">
+                    <div className="flex items-center gap-3">
+                      <span><kbd className="px-1 py-0.5 rounded bg-white dark:bg-white/10 border">↑</kbd> <kbd className="px-1 py-0.5 rounded bg-white dark:bg-white/10 border">↓</kbd> Navigate</span>
+                      <span><kbd className="px-1 py-0.5 rounded bg-white dark:bg-white/10 border">↵</kbd> Open</span>
+                      <span><kbd className="px-1 py-0.5 rounded bg-white dark:bg-white/10 border">Esc</kbd> Dismiss</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSearchFocused(false);
+                      }}
+                      className="text-[#7038F0] dark:text-purple-400 hover:underline font-medium"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1869,49 +2477,28 @@ function DashboardView() {
 
                 {/* Mock Rounds Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[
-                    {
-                      company: 'TCS NQT National Qualifier Mock',
-                      duration: '90 Minutes',
-                      sections: 'Debugging (30m) • Hands-on Coding (60m)',
-                      passingScore: '75%',
-                      badge: 'Campus Drive 2026',
-                    },
-                    {
-                      company: 'Infosys SP / DSE Specialist Round',
-                      duration: '120 Minutes',
-                      sections: 'Full Stack REST Bugfix • DSA Optimization',
-                      passingScore: '70%',
-                      badge: 'Specialist Programmer',
-                    },
-                    {
-                      company: 'Wipro Elite National Talent Hunt Mock',
-                      duration: '60 Minutes',
-                      sections: 'Code Analysis • Error Diagnosis • Logic',
-                      passingScore: '70%',
-                      badge: 'Elite Hiring',
-                    },
-                    {
-                      company: 'Tier-1 Product Company Timed Screening',
-                      duration: '60 Minutes',
-                      sections: 'Concurrency Bugs • System Design • Unit Tests',
-                      passingScore: '85%',
-                      badge: 'Product Track',
-                    },
-                  ].map((exam, i) => (
+                  {MOCK_EXAMS_DATA.map((exam) => (
                     <div
-                      key={i}
-                      className="bg-white dark:bg-[#121026] rounded-3xl p-6 border border-[#E4E0EC] dark:border-white/10 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                      key={exam.id}
+                      className="bg-white dark:bg-[#121026] rounded-3xl p-6 border border-[#E4E0EC] dark:border-white/10 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
                     >
                       <div>
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-[#F8F6FC] dark:bg-[#181530] text-[#8C60F3] dark:text-[#A78BFA] border border-[#E4E0EC] dark:border-white/10">
                             {exam.badge}
                           </span>
-                          <span className="text-xs font-semibold text-[#8E8A9C] dark:text-slate-400">{exam.duration}</span>
+                          <span className="text-xs font-semibold text-[#8E8A9C] dark:text-slate-400 flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            {exam.duration}
+                          </span>
                         </div>
-                        <h3 className="text-lg font-bold text-[#353148] dark:text-white mb-1">{exam.company}</h3>
-                        <p className="text-xs text-[#8E8A9C] dark:text-slate-400 mb-4">{exam.sections}</p>
+                        <h3 className="text-lg font-bold text-[#353148] dark:text-white mb-1 group-hover:text-[#7038F0] dark:group-hover:text-[#A78BFA] transition-colors">
+                          {exam.company}
+                        </h3>
+                        <p className="text-xs text-[#8E8A9C] dark:text-slate-400 mb-2">{exam.sections}</p>
+                        <p className="text-[11px] text-[#6E6A7D] dark:text-slate-400 line-clamp-2 mb-4 leading-relaxed">
+                          {exam.description}
+                        </p>
                       </div>
 
                       <div className="pt-4 border-t border-[#E4E0EC] dark:border-white/10 flex items-center justify-between">
@@ -1919,10 +2506,11 @@ function DashboardView() {
                           Cutoff Target: <strong className="text-[#353148] dark:text-white">{exam.passingScore}</strong>
                         </span>
                         <button
-                          onClick={() => alert(`Starting proctored assessment: ${exam.company}. Fullscreen lock will engage.`)}
-                          className="px-5 py-2 bg-[#8C60F3] hover:bg-[#7A4AEB] text-white text-xs font-bold rounded-xl shadow-sm transition-colors"
+                          onClick={() => handleStartMockExam(exam)}
+                          className="px-5 py-2.5 bg-[#8C60F3] hover:bg-[#7A4AEB] text-white text-xs font-bold rounded-xl shadow-md shadow-[#8C60F3]/25 transition-all hover:scale-[1.02] active:scale-98 cursor-pointer flex items-center gap-1.5"
                         >
-                          Start Mock Test →
+                          <span>Start Mock Test</span>
+                          <span>→</span>
                         </button>
                       </div>
                     </div>
@@ -2653,6 +3241,93 @@ function DashboardView() {
               >
                 <Play className="w-3.5 h-3.5 fill-current" />
                 <span>Launch Isolated Workspace</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 6. PROCTORED MOCK TEST PRE-FLIGHT MODAL                                   */}
+      {/* ========================================================================= */}
+      {activeMockExam && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 dark:bg-[#120F1D]/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#161327] border border-[#E4E0EC] dark:border-white/10 text-[#353148] dark:text-white rounded-3xl w-full max-w-2xl p-6 sm:p-7 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <button
+              onClick={() => setActiveMockExam(null)}
+              className="absolute top-5 right-5 text-[#8E8A9C] hover:text-[#353148] dark:hover:text-white p-2 rounded-xl bg-[#F8F6FC] dark:bg-white/10 transition-colors cursor-pointer"
+              aria-label="Close modal"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-3.5 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#7038F0] to-[#8C60F3] flex items-center justify-center text-white shadow-lg shadow-[#7038F0]/30 shrink-0">
+                <ClipboardList className="w-6 h-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#7038F0]/10 dark:bg-[#8C60F3]/20 text-[#7038F0] dark:text-[#C4B5FD] border border-[#7038F0]/30">
+                    {activeMockExam.badge}
+                  </span>
+                  <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Proctored Session
+                  </span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-extrabold text-[#353148] dark:text-white truncate">
+                  {activeMockExam.company}
+                </h3>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-sm text-[#8E8A9C] dark:text-slate-300 leading-relaxed mb-5">
+              {activeMockExam.description}
+            </p>
+
+            {/* Assessment Specifications */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+              <div className="p-3 rounded-2xl bg-[#F8F6FC] dark:bg-[#100D22] border border-[#E4E0EC] dark:border-white/10 text-center">
+                <div className="text-[11px] text-[#8E8A9C] dark:text-slate-400 font-medium">Duration</div>
+                <div className="text-sm font-extrabold text-[#7038F0] dark:text-[#A78BFA] mt-0.5">{activeMockExam.duration}</div>
+              </div>
+              <div className="p-3 rounded-2xl bg-[#F8F6FC] dark:bg-[#100D22] border border-[#E4E0EC] dark:border-white/10 text-center">
+                <div className="text-[11px] text-[#8E8A9C] dark:text-slate-400 font-medium">Passing Cutoff</div>
+                <div className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">{activeMockExam.passingScore}</div>
+              </div>
+              <div className="p-3 rounded-2xl bg-[#F8F6FC] dark:bg-[#100D22] border border-[#E4E0EC] dark:border-white/10 text-center">
+                <div className="text-[11px] text-[#8E8A9C] dark:text-slate-400 font-medium">Target Role</div>
+                <div className="text-xs font-bold text-[#353148] dark:text-white mt-0.5 truncate">{activeMockExam.role}</div>
+              </div>
+            </div>
+
+            {/* Proctored Exam Guidelines Checklist */}
+            <div className="bg-[#F8F6FC] dark:bg-[#100D20] border border-[#E4E0EC] dark:border-white/10 rounded-2xl p-4 mb-6 space-y-2.5">
+              <div className="text-xs font-bold text-[#353148] dark:text-white flex items-center gap-1.5 mb-2">
+                <CheckCircle2 className="w-4 h-4 text-[#8C60F3]" />
+                <span>Proctored Environment Rules & Instructions:</span>
+              </div>
+              {activeMockExam.rules.map((rule, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-xs text-[#6E6A7D] dark:text-slate-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#8C60F3] shrink-0 mt-1.5" />
+                  <span>{rule}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setActiveMockExam(null)}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-[#8E8A9C] hover:text-[#353148] dark:hover:text-white transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleLaunchMockExamInIDE(activeMockExam)}
+                className="px-6 py-2.5 rounded-xl bg-[#8C60F3] hover:bg-[#7A4AEB] text-white text-xs font-bold shadow-lg shadow-[#8C60F3]/40 transition-all hover:scale-[1.02] active:scale-98 flex items-center gap-2 cursor-pointer"
+              >
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span>Begin Assessment in IDE →</span>
               </button>
             </div>
           </div>
